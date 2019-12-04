@@ -1,28 +1,30 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ahmed\\OneDrive\\Documents\\Visual Studio Code\\Swagger\\SwaggerTest\\SwaggerTest.csproj": {}
+    "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\SwaggerTest.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ahmed\\OneDrive\\Documents\\Visual Studio Code\\Swagger\\SwaggerTest\\SwaggerTest.csproj": {
+    "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\SwaggerTest.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ahmed\\OneDrive\\Documents\\Visual Studio Code\\Swagger\\SwaggerTest\\SwaggerTest.csproj",
+        "projectUniqueName": "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\SwaggerTest.csproj",
         "projectName": "SwaggerTest",
-        "projectPath": "C:\\Users\\ahmed\\OneDrive\\Documents\\Visual Studio Code\\Swagger\\SwaggerTest\\SwaggerTest.csproj",
-        "packagesPath": "C:\\Users\\ahmed\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ahmed\\OneDrive\\Documents\\Visual Studio Code\\Swagger\\SwaggerTest\\obj\\",
+        "projectPath": "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\SwaggerTest.csproj",
+        "packagesPath": "C:\\Users\\ahmed.magdi\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\ahmed\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\ahmed.magdi\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp3.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -70,7 +72,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.0.100\\RuntimeIdentifierGraph.json"
         }
       }
     }
