@@ -1,0 +1,1908 @@
+﻿USE [Retail]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_stk_order]    Script Date: 04/12/2019 06:01:11 م ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[sp_stk_order]
+	 @Mybranch			   int ,	
+	 @Mysection			   int ,
+	 @Mydoctype			   int ,
+	 @Mysite			   int ,
+	 @Mysite_section       int ,
+     @Myorderdate		   smalldatetime ,
+	 @Myorderno		       int ,
+	 @Myreorderdate		   smalldatetime ,
+	 @Myreorderno		   int ,
+	 @Myinvoicedate		   smalldatetime ,
+	 @Myinvoiceno		   int ,
+	 @Mydispatch_type	   smallint ,
+	 @Myduedate		       smalldatetime ,
+	 @Myfromdate		   smalldatetime ,
+	 @Mytodate  		   smalldatetime ,
+	 @MyInventory_type	   smallint ,
+	 @MyInventory_location smallint ,
+     @Mydiscount_type	   smallint ,
+	 @Mydiscount_value     decimal(13,2) ,
+	 @Myuserid		       int ,
+	 @Mycurrentsite	       int out  ,
+	 @Mystatus			   smallint out ,
+	 @Myclosemonthstatus   smallint out ,
+	 @MYinsertstatus	   smallint out ,
+	 @Myerrormessage       varchar(100) out ,
+	 @mynewsequence        int   out
+
+AS
+BEGIN
+DECLARE @Mycompany       int ,
+		@Myreviewstatus  varchar(1),
+		@myday			 varchar(2),
+		@Mysector        int       ,
+		@Myregion        int   ,
+		@Mytranstype     smallint ,
+		@MYlastclosedate smalldatetime ,
+		@mycount         smallint ,
+		@mygoodstype	 smallint ,
+		@Mysequence      int ,
+		@Mysequencestatus smallint ,	
+		@Mysystemcode     smallint ,
+		@MymanualSerial   smallint ,
+		@mycount_header   smallint ,
+		@Mymaxdiscountno  int,
+		@isReceiveViaPO	  int 
+	
+	--==============================================================================================		
+	-- Check the transaction doctype and set initial values for @Mysystemcode
+	--==============================================================================================
+	IF @Mydoctype in (2010, 2012, 2050, 2052, 2058, 1010, 1052, 2956, 20100, 20200, 1049, 2011, 2051, 2033, 1061)
+		Begin
+			Set @Mysystemcode = 2
+		End 
+	Else IF @Mydoctype = 8504 
+		Begin
+			Set @Mysystemcode = 15
+		End 
+	--==============================================================================================		
+	-- Set initial values for @Mysector and @Myregion
+	--==============================================================================================
+   select @Mysector   =  sector ,@Myregion   =  region 
+   from sys_branch where branch = @Mybranch 
+
+	--==============================================================================================		
+	-- Set initial values for @Mycompany, @Mystatus, @Myclosemonthstatus, @mycount, @MYinsertstatus
+	-- And @mycount_header
+	--==============================================================================================
+SET @Mycompany           = 1
+SET @Mystatus            = 0
+Set @Myclosemonthstatus  = 0
+Set @mycount			 = 0
+Set @MYinsertstatus		 = 0
+Set @mycount_header      = 0
+SET @isReceiveViaPO		 = 0
+
+	IF @Mysite_section is Null
+		begin
+			SET @Mysite_section       = 0
+		End	
+
+	IF @Mytranstype	Is Null
+		Begin
+			set @Mytranstype = 201
+		End 
+
+	IF @mygoodstype	Is Null
+		Begin
+			set @mygoodstype = 0
+		End 
+
+	--================================================================================================================
+	-- Receive on PO, Receive from Supplier
+	--================================================================================================================
+	IF @Mydoctype = 20100 OR @Mydoctype = 20200 
+		Begin
+			SELECT 1
+			--Check PO number and date
+			--SELECT @mycount =  count(*) 
+			--from stk_order
+			--Where  company   = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			-- 	   branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+			--	   doctype   = 2010 and orderno   = @myorderno and  orderdate = @myorderdate and
+			--	   reorderno = @myreorderno and reorderdate = @myreorderdate
+				   
+			----If PO number id and date are invalid, throw an error
+			--IF @mycount = 0
+			--	Begin
+			--		SET @Mystatus    = 1
+			--		Set @Myerrormessage = 'Error .. PO Number ' + CONVERT(varchar,@myreorderno) + ' and PO Date ' + CONVERT(varchar,@myreorderdate) + ' Not correct '
+			--	End
+		End
+		
+		--Set default values for null variables
+		IF @Mysection is Null
+		begin
+			SET @Mysection       = 0
+		End	
+		
+		--if no error was thrown, continue
+		IF @Mystatus    = 0
+		BEGIN
+			--get last close date
+			SELECT @MYlastclosedate =  Max(close_date) FROM sys_closing 
+	                       WHERE   company =  @Mycompany AND sector	 =  @Mysector AND  region =  @Myregion	and 
+			                       branch  =  @Mybranch  AND doctype =  2913	 AND systemcode 	=  2 
+			--if month was closed, throw an error                  
+			IF @MYlastclosedate is not null
+			BEGIN
+				IF  @MYlastclosedate >=  @Myorderdate 
+				BEGIN
+					Set @Myclosemonthstatus = 1
+					Set @Myerrormessage = 'Error .. This month Is closed' 
+ 				END 
+			END
+		END
+		
+		--if no error was thrown, continue
+		IF  @Myclosemonthstatus = 0 and @Mystatus    = 0
+		BEGIN
+		
+			--if transaction type is 2010, 20100, 20200
+			IF @Mydoctype = 2010 or @Mydoctype = 20100 or @Mydoctype = 20200
+			BEGIN
+			
+				--if transaction type 20100, 20200, raise receive via PO flag
+				IF @Mydoctype = 20100 OR @Mydoctype = 20200 
+				BEGIN
+					SET @isReceiveViaPO = 1
+					SET @Mydoctype = 2010
+				END
+				
+				--Check if order number is automatically created
+				IF @myorderno IS null Or @myorderno =0 
+				BEGIN 
+					SELECT  @MymanualSerial = manual_serial
+					FROM sys_doctype
+					WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				
+					--get auto sequence
+					IF @MymanualSerial = 1
+					BEGIN
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							BEGIN
+								Set @myorderno     = @Mysequence
+								Set @mynewsequence = @Mysequence
+							END
+					END
+				END
+				ELSE
+				BEGIN
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					DECLARE @HeaderTimeCount INT
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					--=======================================
+					--END OF MODIFICATION
+					--DATE: 03-08-2015
+					--=======================================
+				END
+				
+				--Check if header exists
+				SELECT @mycount =  count(*) from stk_order
+			    Where company   = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+				
+				IF @mycount > 0 
+				Begin
+
+					SELECT @mycount_header =  count(*) from stk_order
+					Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites 
+					from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and   region      = @Myregion and 
+			 	           branch     = @mybranch  and section   = @mysection and   transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate 
+
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							Set @Myerrormessage = 'Error .. Supplier Number ' + CONVERT(varchar,@Mysite) + ' is different from current Supplier Number ' + CONVERT(varchar,@Mycurrentsite)
+						End
+						
+					--Overwrite the user id and document date in existing header	
+					IF (@isReceiveViaPO = 1 AND @Mystatus = 0)
+					BEGIN
+						UPDATE stk_order
+						SET 
+						--orderdate = @myorderdate,
+						userid = @myuserid,
+						invoiceno = @myinvoiceno,
+						invoicedate = @myinvoicedate
+						WHERE	company    = @MyCompany and sector    = @mysector  and   region      = @Myregion and 
+			 					branch     = @mybranch  and section   = @mysection and   transtype  = @MyTransType and
+								doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate 
+								
+								
+						DECLARE @HeaderWeightedCount INT
+					
+						SET @HeaderWeightedCount = 0
+					
+						SELECT 
+						@HeaderWeightedCount = ISNULL(COUNT(*),0)
+						FROM
+						stk_weighted_hd
+						WHERE
+						(company = @MyCompany)
+						AND
+						(branch = @mybranch)
+						AND
+						(transtype = @MyTransType)
+						AND
+						(doctype = @mydoctype)
+						AND
+						(orderno = @myorderno)
+						AND
+						(orderdate = orderdate)
+						 
+						IF @HeaderWeightedCount = 0
+						BEGIN
+							INSERT INTO stk_weighted_hd
+							(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+							VALUES
+							(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+						END
+						
+					END
+				End
+			IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+					--INSERT INTO stk_weighted_hd
+					--(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+					--VALUES
+					--(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+     					
+     					INSERT INTO stk_order ( company,	sector,		region,		branch,		section,	transtype,		doctype,	goodstype,		sites,		sites_section,		orderno,	orderdate,		userid,		reordertype,	reorderno,		reorderdate,	invoiceno,		invoicedate,	review,	posting,new_entry,	transid,	shipmentno,	examinationno,	status,	collection ,storeorder) 
+					VALUES					  ( @MyCompany,	@mysector,	@Myregion,	@mybranch,	@mysection,	@MyTransType,	@mydoctype,	@mygoodstype,	@Mysite,	@mysite_section,	@myorderno,	@myorderdate,	@myuserid,	1010,			@myreorderno,	@myreorderdate,	@myinvoiceno,	@myinvoicedate,	0,		0,		0,			0,			0,			'0',			0,		0,			'0')  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+	--================================================================================================================
+	-- Return to Supplier
+	--================================================================================================================
+	Else IF @Mydoctype = 2050 
+		Begin
+		IF @myorderno IS null Or @myorderno = 0 
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_order
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+				
+				SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @Myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate 
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							Set @Myerrormessage = 'Error .. Supplier Number  '+CONVERT(varchar,@Mysite)+' is difference with current Supplier Number  ' + CONVERT(varchar,@Mycurrentsite)
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+				--HERE TODO
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+							INSERT INTO 
+							stk_order 
+							( company,		sector,		region,		branch,		section,	transtype,		doctype,	goodstype,		sites,		sites_section,		orderno,	orderdate,		userid,		reordertype,	reorderno,		reorderdate,	invoiceno,		invoicedate,	review,	posting,	new_entry,	transid,	shipmentno,	examinationno,		examinationdate,	status,	collection ,storeorder) 
+							VALUES							
+							( @MyCompany,	@mysector,	@Myregion,	@mybranch,	@mysection,	@MyTransType,	@mydoctype,	@mygoodstype,	@Mysite,	@mysite_section,	@myorderno,	@myorderdate,	@myuserid,	1050,			@myreorderno,	@myreorderdate,	@myinvoiceno,	@myinvoicedate,	0,		0,			0,			0,			0,			@Mydispatch_type,	@Myduedate,			0,		0,			'0')  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						
+				End
+		End 
+	--================================================================================================================
+	-- Supplier Replacement
+	--================================================================================================================
+	Else IF @Mydoctype = 2033
+		Begin
+		--================================================
+		--Begin of modification
+		--Date: 05-04-2016		
+		--Check Mark Down number and date
+		--================================================
+			IF @Myinvoiceno IS NOT NULL
+			BEGIN
+			SELECT @mycount =  count(*) 
+			from stk_order
+			Where  company   = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	   branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				   doctype   = 2058 and orderno   = @Myinvoiceno and  orderdate = @Myinvoicedate and dispatch_type IN (1,2,3)
+				   
+			--If Mark Down number id and date are invalid, throw an error
+				IF @mycount = 0
+				Begin
+					SET @Mystatus    = 1
+					--Set @Myerrormessage = 'Error .. Dispatch number or date not correct!! '
+					Set @Myerrormessage = 'خطأ .. رقم أو تاريخ المستهلك خطأ !!'
+				End		
+			END
+			ELSE IF @myreorderno IS NULL
+			BEGIN
+				SET @mycount = 1
+			END
+		--================================================
+		--End of modification
+		--Date: 05-04-2016		
+		--================================================
+		IF @mycount > 0
+		BEGIN
+		IF @myorderno IS null Or @myorderno = 0 
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			SET @mycount = 0
+			select @mycount =  count(*) from stk_order
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+				
+				SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @Myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate 
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							Set @Myerrormessage = 'Error .. Operation Number  '+CONVERT(varchar,@Mysite)+' is difference with current Operation Number  ' + CONVERT(varchar,@Mycurrentsite)
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+				--HERE TODO
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+							INSERT INTO stk_order ( company,sector,region,branch,section,transtype,doctype,goodstype,sites,sites_section,orderno,orderdate,userid,reordertype,reorderno,reorderdate,invoiceno,invoicedate,review,posting,new_entry,transid,shipmentno,examinationno,status,collection ,storeorder) 
+					VALUES				  ( @MyCompany,@mysector,@Myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@mygoodstype,@Mysite,@mysite_section,@myorderno,@myorderdate,@myuserid,1050,@myreorderno,@myreorderdate,@myinvoiceno,@myinvoicedate,0,0,0,0,0,'0',0,0,'0')  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						
+				End
+			END
+		End 
+	--================================================================================================================
+	-- Operation In, Out
+	--================================================================================================================
+	Else IF @Mydoctype = 2011 OR @Mydoctype = 2051
+		Begin
+		IF @myorderno IS null Or @myorderno = 0 
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_order
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+				
+				SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @Myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate 
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							Set @Myerrormessage = 'Error .. Operation Number  '+CONVERT(varchar,@Mysite)+' is difference with current Operation Number  ' + CONVERT(varchar,@Mycurrentsite)
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+				--HERE TODO
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+							INSERT INTO stk_order ( company,sector,region,branch,section,transtype,doctype,goodstype,sites,sites_section,orderno,orderdate,userid,reordertype,reorderno,reorderdate,invoiceno,invoicedate,review,posting,new_entry,transid,shipmentno,examinationno,status,collection ,storeorder) 
+					VALUES				  ( @MyCompany,@mysector,@Myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@mygoodstype,@Mysite,@mysite_section,@myorderno,@myorderdate,@myuserid,1050,@myreorderno,@myreorderdate,@myinvoiceno,@myinvoicedate,0,0,0,0,0,'0',0,0,'0')  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						
+				End
+		End 
+	--================================================================================================================
+	-- Transfer In
+	--================================================================================================================
+	Else IF @Mydoctype = 2012 
+		Begin
+
+			IF @myorderno IS null Or @myorderno = 0  
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_order
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+
+				SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							SET @Myerrormessage = 'Error .. Branch Number  '+CONVERT(varchar,@Mysite)+' is difference with current branch Number  ' + CONVERT(varchar,@Mycurrentsite)
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+				---------------
+				DECLARE @enable_transfer_info varchar(100)
+				SELECT @enable_transfer_info = setting 
+				FROM sys_setup
+				WHERE parameter = 'enable_transfer_info_pda'
+			
+				IF @enable_transfer_info is Null
+				BEGIN
+					SET @enable_transfer_info = '0'
+				End	
+				
+				IF @enable_transfer_info = '0'
+				BEGIN
+				--HERE TODO
+				--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+
+
+				--	INSERT INTO stk_order ( company,sector,region,branch,section,transtype,doctype,goodstype,sites,sites_section,orderno,orderdate,userid,reordertype,reorderno,reorderdate,invoiceno,invoicedate,review,posting,new_entry,transid,shipmentno,examinationno,status,collection ,storeorder) 
+				--	VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@mygoodstype,@Mysite,@mysite_section,@myorderno,@myorderdate,@myuserid,1012,@myreorderno,@myreorderdate,@myinvoiceno,@myinvoicedate,0,0,0,0,0,'0',0,0,'0')  
+				
+				
+				--=======================================
+				--Magdi PDA HUB Code
+				--DATE: 04-12-2019
+				--=======================================
+				declare @jsonBody nvarchar(max);
+				declare @localRowCount varchar(100) ;--- set @localRowCount = null;
+			---	declare @responseText nvarchar(max);
+
+
+				set @jsonBody = 
+				'{
+					"company"		: '+ STR(@Mycompany )+',
+					"sector"		: '+ STR(@Mysector) +',
+					"region"		: '+ STR(@Mycompany )+',
+					"branch"		: '+ STR(@Mybranch) +',
+					"section"		: '+ STR(@Mysection)+',
+					"transtype"		: '+ STR(@Mytranstype) +',
+					"doctype"		: '+ STR(@Mydoctype) +',
+					"goodstype"		: '+ STR(@mygoodstype)+',
+					"sites"			: '+ STR(@Mysite) +',
+					"sites_section"	: '+ STR(@Mysite_section) +',
+					"orderno"		: '+ STR(@Myorderno)+',
+					"orderdate"		: "'+ FORMAT(@Myorderdate, 'yyyy-MM-dd')  +'",
+					"userid"		: '+ STR(@Myuserid) +',
+					"reordertype"	: '+ STR(1012) +',
+					"reorderno"		: '+ STR(@Myreorderno) +',
+					"reorderdate"	: '+ convert(varchar,@Myreorderdate) +',
+					"invoiceno"		: '+ STR(@Myinvoiceno) +',
+					"invoicedate"	: "'+ FORMAT(@Myinvoicedate, 'yyyy-MM-dd') +'",
+					"review"		: 0,
+					"posting"		: 0,
+					"new_entry"		: 0,
+					"transid"		: 0,
+					"shipmentno"	: 0,
+					"examinationno"	: 0,
+					"status"		: 0,
+					"collection"	: 0,
+					"storeorder"	: 0
+				}'
+
+				exec    [dbo].[sp_HttpPost]  @jsonBody, @localRowCount output;
+			
+				--=======================================
+				--Magdi PDA HUB Code
+				--DATE: 04-12-2019
+				--=======================================
+
+				
+				
+				END
+				ELSE
+				BEGIN
+				--HERE TODO
+				--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+				--	INSERT INTO stk_order ( company,sector,region,branch,section,transtype,doctype,goodstype,sites,sites_section,orderno,orderdate,userid,reordertype,reorderno,reorderdate,invoiceno,invoicedate,review,posting,new_entry,transid,shipmentno,examinationno,status,collection ,storeorder) 
+				--	VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@mygoodstype,@Mysite,@mysite_section,@myorderno,@myorderdate,@myuserid,1012,NULL,NULL,@myreorderno,@myreorderdate,0,0,0,0,0,'0',0,0,'0')  
+				
+				
+
+				--=======================================
+				--Magdi PDA HUB Code
+				--DATE: 04-12-2019
+				--=======================================
+				
+
+
+			--	set @localRowCount = 0;
+				set @jsonBody = 
+				'{
+					"company"		: '+ STR(@Mycompany )+',
+					"sector"		: '+ STR(@Mysector) +',
+					"region"		: '+ STR(@myregion)+',
+					"branch"		: '+ STR(@mybranch) +',
+					"section"		: '+ STR(@Mysection)+',
+					"transtype"		: '+ STR(@Mytranstype) +',
+					"doctype"		: '+ STR(@Mydoctype) +',
+					"goodstype"		: '+ STR(@mygoodstype)+',
+					"sites"			: '+ STR(@Mysite) +',
+					"sites_section"	: '+ STR(@Mysite_section) +',
+					"orderno"		: '+ STR(@Myorderno)+',
+					"orderdate"		: "'+ FORMAT(@Myorderdate, 'yyyy-MM-dd')  +'",
+					"userid"		: '+ STR(@Myuserid) +',
+					"reordertype"	: '+ STR(1012) +',
+					"reorderno"		:	null ,
+					"reorderdate"	:	null,
+					"invoiceno"		: '+ STR(@Myreorderno) +',
+					"invoicedate"	: "'+ FORMAT(@Myreorderdate , 'yyyy-MM-dd') +'",
+					"review"		: 0,
+					"posting"		: 0,
+					"new_entry"		: 0,
+					"transid"		: 0,
+					"shipmentno"	: 0,
+					"examinationno"	: 0,
+					"status"		: 0,
+					"collection"	: 0,
+					"storeorder"	: 0
+				}'
+
+				  exec  [dbo].[sp_HttpPost] @Body = @jsonBody , @ResponseText =  @localRowCount output;
+			
+				--=======================================
+				--Magdi PDA HUB Code
+				--DATE: 04-12-2019
+				--=======================================
+
+				
+				
+				END
+				---------------	
+					 IF  @localRowCount <> 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						
+				End
+		End 
+	--================================================================================================================
+	-- Transfer Out
+	--================================================================================================================
+	Else IF @Mydoctype = 2052 
+		Begin
+
+		IF @myorderno IS null Or @myorderno = 0  
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_order
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+				
+				SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							SET @Myerrormessage = 'Error .. Branch Number  '+CONVERT(varchar,@Mysite)+' is difference with current branch Number  ' + CONVERT(varchar,@Mycurrentsite)
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+				
+					--HERE TODO
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+					INSERT INTO stk_order ( company,sector,region,branch,section,transtype,doctype,goodstype,sites,sites_section,orderno,orderdate,userid,reordertype,reorderno,reorderdate,invoiceno,invoicedate,review,posting,new_entry,transid,shipmentno,examinationno,status,collection ,storeorder) 
+					VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@mygoodstype,@Mysite,@mysite_section,@myorderno,@myorderdate,@myuserid,1052,@myreorderno,@myreorderdate,@myinvoiceno,@myinvoicedate,0,0,0,0,0,'0',0,0,'0')  
+						 IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						
+				End
+		End 
+	--================================================================================================================
+	-- Mark Down
+	--================================================================================================================
+Else IF @Mydoctype = 2058 
+		Begin
+			IF @myorderno IS null Or @myorderno = 0 
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno     = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_order
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+
+					SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+
+					select @mycurrentsite =  sites from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+						End
+				End
+			IF @Mystatus  = 0	and @mycount = 0 	
+				Begin	
+					--HERE TODO
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company,		branch,		transtype,		doctype,	orderno,	orderdate,		sites,		userid,		transdate)
+						VALUES
+						(@MyCompany,	@mybranch,	@MyTransType,	@mydoctype, @myorderno, @myorderdate,	@Mysite,	@myuserid,	GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+					INSERT INTO 
+					stk_order 
+					( company,		sector,		region,		branch,		section,	transtype,		doctype,	goodstype,		sites,		sites_section,	orderno,	orderdate,		userid,		reordertype,	reorderno,		reorderdate,	invoiceno,		invoicedate,	review,	posting,new_entry,	transid,	shipmentno,	examinationno,	status,	collection ,	storeorder,	dispatch_type) 
+					VALUES				  
+					( @MyCompany,	@mysector,	@myregion,	@mybranch,	@mysection,	@MyTransType,	@mydoctype,	@mygoodstype,	@Mysite,	@mysite_section,@myorderno,	@myorderdate,	@myuserid,	NULL,			@myreorderno,	@myreorderdate,	@myinvoiceno,	@myinvoicedate,	0,		0,		0,			0,			0,			'0',			0,		0,				'0',		@MyDispatch_type)  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						End
+		End
+	--================================================================================================================
+	-- Create PO
+	--================================================================================================================
+Else IF @Mydoctype = 1010 
+		Begin
+
+			IF @myorderno IS null Or @myorderno = 0  
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_reorder
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+
+				SELECT @mycount_header =  count(*) from stk_reorder
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+					   review = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is Reviewed. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_reorder
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and reorderno   = @myorderno and   reorderdate = @myorderdate
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							Set @Myerrormessage = 'Error .. Supplier Number  '+CONVERT(varchar,@Mysite)+' is difference with current Supplier Number  ' + CONVERT(varchar,@Mycurrentsite)
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+					--HERE TODO
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+					INSERT INTO stk_reorder ( company,sector,region,branch,section,transtype,doctype,goodstype,sites,sites_section,reorderno,reorderdate,userid,duedate,status,review,posting,transid,transdate,collection) 
+					VALUES				    ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@mygoodstype,@Mysite,@mysite_section,@myorderno,@myorderdate,@myuserid,@myduedate,0,0,0,1,getdate(),1)  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+					
+				End
+		End 
+	--================================================================================================================
+	-- Wish List
+	--================================================================================================================
+Else IF @Mydoctype = 1052
+		Begin
+		IF @myorderno IS null Or @myorderno = 0  
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+						print @Mysequence
+					End
+			End 
+			select @mycount =  count(*) from stk_reorder
+			     Where company   = @MyCompany and sector      = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section     = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+
+				
+				SELECT @mycount_header =  count(*) from stk_reorder
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+					   review = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is Reviewed. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_reorder
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and reorderno   = @myorderno and   reorderdate = @myorderdate
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+				--HERE TODO
+				--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+					INSERT INTO stk_reorder ( company,sector,region,branch,section,transtype,doctype,goodstype,sites,sites_section,reorderno,reorderdate,userid,duedate,status,review,posting,transid,transdate,collection) 
+					VALUES				    ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@mygoodstype,@Mysite,@mysite_section,@myorderno,@myorderdate,@myuserid,@myduedate,0,0,0,1,getdate(),1)  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						
+				End
+		End 
+	--================================================================================================================
+	-- Inventory Check
+	--================================================================================================================
+Else IF @Mydoctype = 2956 
+		Begin
+			
+			  SELECT @mycount_header     =  count(*) from sys_closing
+			     Where location    = @mybranch  and doctype     = 2980  and  close_date = @myorderdate 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error Not allowed to add in finished Inventory. Do you want to finish ? '
+				End
+
+			IF @mycount_header = 0 and ( @myorderno IS null Or @myorderno = 0   ) 
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1 
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_inventory
+			     Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  committee   = @myorderno and  inventory_date = @myorderdate 
+			
+			IF @mycount    = 0	
+				Begin	
+				
+					IF @Mysite is null
+					BEGIN
+						SET @Mysite = 0
+					END
+				--HERE TODO
+					--=======================================
+					--BEGIN OF MODIFICATION
+					--DATE: 03-08-2015
+					--Insert order creation time
+					--=======================================
+					
+					SET @HeaderTimeCount = 0
+					
+					SELECT 
+					@HeaderTimeCount = ISNULL(COUNT(*),0)
+					FROM
+					sys_audit_trail
+					WHERE
+					(compay = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(systemcode = 2)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(docno = @myorderno)
+					AND
+					(docdate = @myorderdate)
+					AND
+					(transaction_id = 877)
+					
+					IF @HeaderTimeCount = 0
+					BEGIN
+						--Insert create time in sys_audit_trail (1-	Start Time: will have transaction_id = 877)
+						INSERT INTO  sys_audit_trail		
+						(compay,		branch,		systemcode, doctype,	docno,		docdate,		transaction_id, transdate,	userid,		itemean, barcode,	qty,	site)
+						VALUES	
+						(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,	@myorderdate,	877,			GETDATE(),	@myuserid,	null,	null,		null,	null)
+					END
+					-------
+					SET @HeaderWeightedCount = 0
+					
+					SELECT 
+					@HeaderWeightedCount = ISNULL(COUNT(*),0)
+					FROM
+					stk_weighted_hd
+					WHERE
+					(company = @MyCompany)
+					AND
+					(branch = @mybranch)
+					AND
+					(transtype = @MyTransType)
+					AND
+					(doctype = @mydoctype)
+					AND
+					(orderno = @myorderno)
+					AND
+					(orderdate = orderdate)
+						 
+					IF @HeaderWeightedCount = 0
+					BEGIN
+						INSERT INTO stk_weighted_hd
+						(company, branch, transtype, doctype, orderno, orderdate, sites, userid, transdate)
+						VALUES
+						(@MyCompany, @mybranch, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @myuserid, GETDATE())
+					END
+				--=======================================
+				--END OF MODIFICATION
+				--DATE: 03-08-2015
+				--=======================================
+
+				INSERT INTO stk_weighted_hd
+				(company,		branch,		transtype,		doctype,	orderno,	orderdate,		sites,		userid,		transdate)
+				VALUES
+				(@MyCompany,	@mybranch,	@MyTransType,	@mydoctype, @myorderno, @myorderdate,	@Mysite,	@myuserid,	GETDATE())
+				
+				INSERT INTO stk_inventory ( company,sector,region,branch,section,inventory_type,inventory_date,committee,item_section,goodstype,itemtype,userid,transid,status,printed,posting,review,collection)
+				VALUES				      ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyInventory_type,@myorderdate,@myorderno,@mysite_section,@mygoodstype,0,@myuserid,@MyInventory_location,0,0,0,0,0)  
+					IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+					
+				End
+		End 
+	--================================================================================================================
+	-- Discount
+	--================================================================================================================
+Else IF @Mydoctype = 8504 
+		Begin
+			IF @myorderno IS null Or @myorderno = 0 
+			Begin 
+				select @Mysequence = max(discountno) + 1 from sys_discount 
+					Set @myorderno     = @Mysequence
+					Set @mynewsequence = @Mysequence
+			End 
+			select @mycount =  count(*) from sys_discount
+			     Where discountno    = @myorderno		and discountid   = @Mydiscount_type  and
+					   discounttype  = @Mydiscount_type and date_from    = @Myfromdate  and date_to   = @Mytodate 
+			IF @mycount    = 0	
+				Begin	
+
+				INSERT INTO sys_discount  ( discountno,discountid,disc_applied_to,discounttype,discountvalue,date_from,date_to,min_value,max_value,priority,discount_fixed,usage,userid,transdate)
+				VALUES				      ( @myorderno,@Mydiscount_type,1,@Mydiscount_type,@Mydiscount_value,@Myfromdate,@Mytodate,0,0,0,0,0,@myuserid,getdate())  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+			Else IF @mycount > 0
+			Begin
+				select @mycount_header   =  count(*) from sys_discount
+			     Where discountno    = @myorderno		and discountid   = @Mydiscount_type  and
+					   discounttype  = @Mydiscount_type and date_from    = @Myfromdate  and date_to   = @Mytodate and
+						usage <> 0  
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error Not allowed to add Discount reviewed. Do you want to finish ? '
+				End
+
+			End 
+		End 
+	--================================================================================================================
+	-- Purchase Request
+	--================================================================================================================
+Else IF @Mydoctype = 1049 
+		Begin
+
+			SET @mydoctype = 1060
+			
+			IF @myorderno IS null Or @myorderno = 0 
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno     = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from pur_request
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and requestno   = @myorderno and  requestdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+
+					SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   review = 1 
+
+				IF @mycount_header > 0 
+					Begin
+						SET @Mystatus        = 100
+						SET @Myerrormessage  = 'Error This Document Is Reviewed. Do you want to finish ? '
+					End
+				End
+			IF @Mystatus  = 0	and @mycount = 0 	
+				Begin	
+					INSERT INTO pur_request ( company, sector, region, branch, section, transtype, doctype, requestno, requestdate, sites, userid, goodstype , qtyflag , transdate ) 
+					VALUES				  ( @MyCompany, @mysector, @myregion, @mybranch, @mysection, @MyTransType, @mydoctype, @myorderno, @myorderdate, @Mysite, @Myuserid, @mygoodstype,0, GETDATE())  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						End
+		End
+		--------------------------
+	Else IF @Mydoctype = 1061 
+		Begin
+
+		SET @Mydoctype = 2052
+		
+		IF @myorderno IS null Or @myorderno = 0  
+			Begin 
+			SELECT  @MymanualSerial = manual_serial
+			FROM sys_doctype
+			WHERE systemcode  = @MySystemCode AND transtype  = @MyTransType AND doctype	= @Mydoctype
+				IF @MymanualSerial = 1
+					Begin
+						exec  sp_getsequence @Mycompany,@Mysector,@Myregion,@Mybranch,@Mysection,@Mysystemcode,@MyTransType,@Mydoctype,@Mysequence out, @Mysequencestatus out 
+						IF @Mysequencestatus = 0 
+							Begin
+								Set @myorderno = @Mysequence
+								Set @mynewsequence = @Mysequence
+							End
+					End
+			End 
+			select @mycount =  count(*) from stk_order
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 
+			IF @mycount > 0 
+				Begin
+				
+				SELECT @mycount_header =  count(*) from stk_order
+			     Where company     = @MyCompany and sector    = @mysector  and  region    = @Myregion and 
+			 	       branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   new_entry = 1 
+
+			IF @mycount_header > 0 
+				Begin
+					SET @Mystatus        = 100
+					SET @Myerrormessage  = 'Error This Document Is not primary. Do you want to finish ? '
+				End
+
+					select @mycurrentsite =  sites from stk_order
+				     Where company    = @MyCompany and sector    = @mysector  and region      = @myregion and 
+			 	           branch     = @mybranch  and  section  = @mysection and  transtype  = @MyTransType and
+				           doctype    = @mydoctype and orderno   = @myorderno and   orderdate = @myorderdate
+					IF @Mycurrentsite <> @Mysite
+						Begin
+							SET @Mystatus    = 1
+							SET @Myerrormessage = 'Error .. Branch Number  '+CONVERT(varchar,@Mysite)+' is difference with current branch Number  ' + CONVERT(varchar,@Mycurrentsite)
+						End
+				End
+				IF @Mystatus  = 0	and @mycount = 0 
+				Begin	
+					INSERT INTO stk_order ( company,	sector,		region,		branch,		section,	transtype,		doctype,	goodstype,		sites,	sites_section,	orderno,	orderdate,		userid,		reordertype,reorderno,		reorderdate,	invoiceno,		invoicedate,	review,	posting,new_entry,	transid,shipmentno,	examinationno,	status,	collection ,storeorder	, transdate ) 
+					VALUES				  ( @MyCompany,	@mysector,	@myregion,	@mybranch,	@mysection,	@MyTransType,	@mydoctype,	@mygoodstype,	@Mysite,@mysite_section,@myorderno,	@myorderdate,	@myuserid,	1060,		@myreorderno,	@myreorderdate,	@myinvoiceno,	@myinvoicedate,	0,		0,		0,			0,		0,			'0',			0,		0,			'0'			, GETDATE() )  
+						 IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+						
+				End
+		End 
+		---------------------------
+End 
+
+End

@@ -1,0 +1,1406 @@
+﻿USE [Retail]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_stk_order_items]    Script Date: 05/12/2019 07:45:45 م ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp_stk_order_items]
+	 @mybranch			   int ,	
+	 @mysection			   int ,
+	 @mydoctype			   int ,
+	 @Mysite			   int ,
+	 @Mysite_section       int ,
+     @myorderdate		   smalldatetime ,
+	 @myorderno		       int ,
+	 @Myfromdate		   smalldatetime ,
+	 @Mytodate  		   smalldatetime ,
+	 @Myduedate  		   smalldatetime ,
+	 @MyInventory_type	   smallint ,
+     @Mydiscount_type	   smallint ,
+	 @Mydiscount_value     decimal(13,3) ,
+	 @Myactual_qty         decimal(13,3) ,
+	 @Myfree_qty           decimal(13,3) ,
+	 @Myuserid		       int ,
+	 @Mybarcode            varchar(20) ,
+	 @Mycurrentsite	       int out ,
+	 @Mystatus			   smallint out ,
+	 @Myclosemonthstatus   smallint out ,
+	 @MYinsertstatus	   smallint out ,
+	 @Myerrormessage       varchar(100) out 
+
+AS
+BEGIN
+
+
+----------------------------------------------
+-- Declare Variables
+----------------------------------------------
+DECLARE @MyCompany       int ,
+		@Myreviewstatus  varchar(1),
+		@myday			 varchar(2),
+		@mysector        int       ,
+		@myregion        int   ,
+		@MyTransType     smallint ,
+		@MYlastclosedate smalldatetime ,
+		@mycount         smallint ,
+		@mygoodstype	 smallint ,
+		@Mysequence      int ,
+		@Mysequencestatus smallint ,	
+		@Mysystemcode     smallint ,
+		@MymanualSerial   smallint ,
+		@Myitemtype       smallint ,
+		@Myitemean        varchar(13),
+		@myunit           smallint ,
+		@myexpirydate	  smalldatetime ,
+		@Mytransno        smallint ,
+		@Mypeices         smallint ,
+		@Myactual_count   smallint ,
+		@Myactual_cost    decimal(13,3),
+		@Mycostprice      decimal(13,3),
+		@MyInventory_location  smallint ,
+		@mydepartment     smallint,
+		@mycount_header   smallint,
+	    @myacceptstatus   char(1),
+		@mycountitemsupplier smallint,
+		@searchType			int,
+		@finalSearchType	int,
+		@supplierId int 
+----------------------------------------------
+-- Set @mysector, @myregion
+----------------------------------------------		
+  select @mysector = sector ,@myregion = region 
+  from sys_branch 
+  where branch = @mybranch 
+
+----------------------------------------------		
+-- Set dafault variables values
+----------------------------------------------		
+SET @MyCompany           = 1
+SET @Mystatus            = 0
+Set @Myclosemonthstatus  = 0
+Set @mycount			 = 0
+Set @MYinsertstatus		 = 0
+SET @mycount_header      = 0
+Set @mycountitemsupplier = 0
+SET @myexpirydate		 = '1900/01/01'
+
+
+----------------------------------------------		
+-- Set dafault variables values if NULL
+----------------------------------------------		
+	SET @searchType = @mysection --< 0 = scanner, 1 = barcode manual, 2 = description
+	SET @mysection = 0
+	
+	IF @searchType = 1
+	BEGIN
+		SET @finalSearchType = 880--description
+	END
+	ELSE IF @searchType = 2
+	BEGIN
+		SET @finalSearchType = 879--barcode manually
+	END
+	ELSE 
+	BEGIN
+		SET @finalSearchType = 0--Scanner - Will not saved in sys_audit_trail
+	END
+	
+	IF @finalSearchType is null
+	BEGIN
+		SET @finalSearchType = 0
+	END
+	
+	IF @mysection is Null
+		begin
+			SET @mysection  = 0
+		End	
+		
+	IF @Mysite_section is Null
+		begin
+			SET @Mysite_section       = 0
+		End	
+
+	IF @MyTransType	Is Null
+		Begin
+			set @MyTransType = 201
+		End 
+
+	IF @Myfree_qty	Is Null
+		Begin
+			set @Myfree_qty = 0
+		End 
+
+	IF @Myactual_qty	Is Null
+		Begin
+			set @Myactual_qty = 0
+		End 
+
+	IF @Myactual_count	Is Null
+		Begin
+			set @Myactual_count = 0
+		End 
+
+--==============================================================================================		
+-- Get @Mypeices, @myunit, @Mycostprice and @Myitemean by barcode from sys_item_units table
+--==============================================================================================
+SELECT @Mypeices = peices  ,@myunit = unit ,@Mycostprice = costprice ,@Myitemean = itemean
+from  sys_item_units
+where barcode = @Mybarcode
+
+--==============================================================================================
+-- Get @Myitemtype and @mydepartment by itemean from sys_item table
+--==============================================================================================
+SELECT @Myitemtype = itemtype , @mydepartment = department from sys_item
+where  itemean = @Myitemean
+
+--==============================================================================================
+-- Get @myacceptstatus from sys_Setup
+-- if @myacceptstatus = 0 it will not be allowed to accept item that does not belong to the given supplier
+-- Else it will define the item as it belong to the given supplier then will accept the item
+--==============================================================================================
+SELECT @myacceptstatus = setting  from sys_setup
+where  parameter ='accept_item_does_not_belong_to_supplier_pda'
+
+--==============================================================================================
+-- Receive from Suplier (2010 or 20100)
+--==============================================================================================
+IF @mydoctype = 2010 Or @mydoctype = 20100
+	Begin
+		  set @mydoctype = 2010
+			
+	IF 	@Mystatus        =  0
+		Begin
+		
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+				INSERT INTO stk_weighted_det
+						(company,branch,transtype,doctype,orderno,orderdate,transno,itemean,barcode,qty,unit_price,userid,transdate)
+				VALUES	(@MyCompany,@mybranch,@MyTransType,@mydoctype,@myorderno,@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),@Myitemean,@Mybarcode,@Myactual_qty,@Mycostprice,@Myuserid,GETDATE())
+			END
+	
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================
+			
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 06-04-2016
+			--Update stk_reorder_items with actual and free qty
+			--================================================
+			DECLARE @originalPoNo	INT
+			DECLARE @originalPoDate	DATETIME
+			DECLARE @orederedQty	DECIMAL(18, 3)
+			DECLARE @orderedFree	DECIMAL(18, 3)
+			DECLARE @orderedCost	DECIMAL(18, 3)
+
+			SET @orederedQty = 0
+			SET @orderedFree = 0
+			
+			SELECT 
+			@originalPoNo = reorderno
+			from stk_order
+			Where 
+			company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+			doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate
+			
+			SELECT 
+			@originalPoDate = reorderdate
+			from stk_order
+			Where 
+			company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+			doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate
+			
+			SELECT
+			@orederedQty = item_qty,
+			@orderedFree = item_count,
+			@orderedCost = cost_price
+			FROM
+			stk_reorder_items
+			WHERE
+			company		= @MyCompany  and sector    = @mysector  and  region    = @myregion and 
+			branch		= @mybranch   and section   = @mysection and  transtype = @MyTransType and
+			doctype		= 1010		and 
+			reorderno	= @originalPoNo and  
+			reorderdate = @originalPoDate and 
+			barcode		= @Mybarcode
+
+			--======================================
+			--Begin of modification of 12-07-2017
+			--To get supplier price
+			--======================================
+			IF @orderedCost = null OR @orderedCost IS NULL
+			BEGIN
+				SELECT
+				@supplierId = sites
+				FROM 
+				stk_order
+				WHERE
+				company	= @MyCompany and	sector	= @mysector  and  region    = @myregion and 
+		 		branch	= @mybranch  and	section	= @mysection and  transtype = @MyTransType and
+				doctype	= @mydoctype and	orderno	= @myorderno and  orderdate = @myorderdate
+						   
+				SELECT 
+				@orderedCost = unitprice
+				FROM 
+				sys_item_suppliers
+				WHERE 
+				supplierno = @supplierId AND itemean = @Myitemean AND barcode = @Mybarcode
+			END
+
+			--======================================
+			--End of modification of 12-07-2017
+			--======================================
+			
+			
+			UPDATE stk_reorder_items
+			SET
+			actual_qty			= actual_qty + @Myactual_qty,
+			branch_weight		= branch_weight + @Myfree_qty,
+			last_modified_time	= Substring(CONVERT(char,getdate(), 120),1,20)          
+			Where 
+			company		= @MyCompany  and sector    = @mysector  and  region    = @myregion and 
+			branch		= @mybranch   and section   = @mysection and  transtype = @MyTransType and
+			doctype		= 1010		and 
+			reorderno	= @originalPoNo and  
+			reorderdate = @originalPoDate and 
+			barcode		= @Mybarcode
+			
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 06-04-2016
+			--================================================
+			
+			
+			
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================
+			SELECT @mycount =  count(*) from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+					   
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+			
+					UPDATE stk_order_items 
+					--set     actual_qty  = actual_qty + @Myactual_qty ,
+					SET     
+							--orderdate = @myorderdate,
+							actual_qty		= actual_qty + @Myactual_qty ,
+							free_qty		= free_qty + @Myfree_qty ,
+							actual_count	= actual_count+1,
+							collection		= 999,
+							userid			= @Myuserid
+							--item_qty		= item_qty - @Myactual_qty,
+							--item_count		= item_count - @Myfree_qty
+							--==========================================================
+							-- Change the cost price with the new cost price (MFO)
+							--==========================================================
+							--costprice   = @Myfree_qty 
+					 WHERE company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+
+				End
+				
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			Else IF  @mycount = 0 
+				Begin	
+
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 	
+
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+
+		INSERT INTO stk_order_items ( company,		sector,		region,		branch,		section,	transtype,		doctype,	orderno,	orderdate,		itemtype,	itemean,	barcode,	unit,	expirydate,		transno,	peices,		item_qty,				item_count,				item_cost,	actual_qty,		actual_count,	actual_cost,	costprice,		userid,		transid,	transdate,	collection,	free_qty,		posting	) 
+		VALUES						( @MyCompany,	@mysector,	@myregion,	@mybranch,	@mysection,	@MyTransType,	@mydoctype,	@myorderno,	@myorderdate,	@Myitemtype,@Myitemean,	@Mybarcode,	@myunit,@myexpirydate,	@Mytransno,	@Mypeices,	@orederedQty,			@orderedFree,			0,			@Myactual_qty,	@Myactual_count,0,				@orderedCost,	@Myuserid,	0,			getdate(),	999,		@Myfree_qty,	0		)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		IF @myacceptstatus = '1'
+			Begin
+			select @mycountitemsupplier = count(*) from sys_item_suppliers
+			Where barcode = @Mybarcode and supplierno = @Mysite
+
+			IF @mycountitemsupplier = 0 
+				begin
+			 INSERT INTO sys_item_suppliers  
+			   ( itemean,unit,supplierno,barcode,supply_type,unitprice,currency_code,minqty,   
+			   delay,order_share,purchasedate,status,userid,transid,transdate,peices )  
+
+              SELECT top 1 itemean,unit,@Mysite,barcode,supply_type,@Myfree_qty,currency_code,   
+	                minqty,delay,order_share,purchasedate,status,userid,transid,getdate(),peices  
+              FROM  sys_item_suppliers 
+	          Where barcode = @Mybarcode  
+
+				End 
+
+			End
+
+
+		End 
+	End	
+	
+--==============================================================================================
+-- Return to Suplier (2050)
+--==============================================================================================
+	Else IF @mydoctype = 2050 
+			Begin
+			
+
+		IF 	@Mystatus        =  0
+			Begin
+			
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+					INSERT INTO stk_weighted_det
+					(company,branch,transtype,doctype,orderno,orderdate,transno,itemean,barcode,qty,unit_price,userid,transdate)
+					VALUES	(@MyCompany,@mybranch,@MyTransType,@mydoctype,@myorderno,@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),@Myitemean,@Mybarcode,@Myactual_qty,@Mycostprice,@Myuserid,GETDATE())
+			END
+			
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================
+				SELECT @mycount =  count(*) from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					
+					update stk_order_items 
+					set     actual_qty = actual_qty + @Myactual_qty ,
+							free_qty   = free_qty   + @Myfree_qty  ,
+							actual_count = actual_count+1,
+							collection=999
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			IF  @mycount = 0 
+				Begin	
+				
+				--======================================
+				--Begin of modification of 20-07-2016
+				--To get supplier price
+				--======================================
+				SELECT
+				@supplierId = sites
+				FROM 
+				stk_order
+				WHERE
+				company	= @MyCompany and	sector	= @mysector  and  region    = @myregion and 
+		 		branch	= @mybranch  and	section	= @mysection and  transtype = @MyTransType and
+				doctype	= @mydoctype and	orderno	= @myorderno and  orderdate = @myorderdate
+						   
+				SELECT 
+				@Mycostprice = unitprice
+				FROM 
+				sys_item_suppliers
+				WHERE 
+				supplierno = @supplierId AND itemean = @Myitemean AND barcode = @Mybarcode
+				--======================================
+				--End of modification of 20-07-2016
+				--======================================
+				
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 	
+		
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+		INSERT INTO stk_order_items ( company,sector,region,branch,section,transtype,doctype,orderno,orderdate,itemtype,itemean,barcode,unit,expirydate,   
+								transno,peices,item_qty,item_count,item_cost,actual_qty,actual_count,actual_cost,costprice,userid,   
+								transid,transdate,collection,free_qty,posting) 
+		VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@myorderno,@myorderdate,@Myitemtype,@Myitemean,@Mybarcode,@myunit,@myexpirydate,
+								@Mytransno,@Mypeices,0,0,0,@Myactual_qty,@Myactual_count,0,@Mycostprice,@Myuserid,0,getdate(),999,@Myfree_qty,0)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+End
+--==============================================================================================
+-- Supplier Replacement (2033)
+--==============================================================================================
+
+	Else IF @mydoctype = 2033 
+			Begin
+			
+
+		IF 	@Mystatus        =  0
+			Begin
+			
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+					INSERT INTO stk_weighted_det
+					(company,branch,transtype,doctype,orderno,orderdate,transno,itemean,barcode,qty,unit_price,userid,transdate)
+					VALUES	(@MyCompany,@mybranch,@MyTransType,@mydoctype,@myorderno,@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),@Myitemean,@Mybarcode,@Myactual_qty,@Mycostprice,@Myuserid,GETDATE())
+			END
+			
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================
+				SELECT @mycount =  count(*) from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					
+					update stk_order_items 
+					set     actual_qty = actual_qty + @Myactual_qty ,
+							free_qty   = free_qty   + @Myfree_qty  ,
+							actual_count = actual_count+1,
+							collection=999
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			IF  @mycount = 0 
+				Begin	
+
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 	
+		
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+		INSERT INTO stk_order_items ( company,sector,region,branch,section,transtype,doctype,orderno,orderdate,itemtype,itemean,barcode,unit,expirydate,   
+								transno,peices,item_qty,item_count,item_cost,actual_qty,actual_count,actual_cost,costprice,userid,   
+								transid,transdate,collection,free_qty,posting) 
+		VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@myorderno,@myorderdate,@Myitemtype,@Myitemean,@Mybarcode,@myunit,@myexpirydate,
+								@Mytransno,@Mypeices,0,0,0,@Myactual_qty,@Myactual_count,0,@Mycostprice,@Myuserid,0,getdate(),999,@Myfree_qty,0)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+End
+--==============================================================================================
+-- Operation In, Out (2011, 2051)
+--==============================================================================================
+	Else IF @mydoctype = 2011 OR @mydoctype = 2051 
+			Begin
+			
+
+		IF 	@Mystatus        =  0
+			Begin
+			
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+					INSERT INTO stk_weighted_det
+					(company,branch,transtype,doctype,orderno,orderdate,transno,itemean,barcode,qty,unit_price,userid,transdate)
+					VALUES	(@MyCompany,@mybranch,@MyTransType,@mydoctype,@myorderno,@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),@Myitemean,@Mybarcode,@Myactual_qty,@Mycostprice,@Myuserid,GETDATE())
+			END
+			
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================
+				SELECT @mycount =  count(*) from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					
+					update stk_order_items 
+					set     actual_qty = actual_qty + @Myactual_qty ,
+							free_qty   = free_qty   + @Myfree_qty  ,
+							actual_count = actual_count+1,
+							collection=999
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			IF  @mycount = 0 
+				Begin	
+
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 	
+		
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+		INSERT INTO stk_order_items ( company,sector,region,branch,section,transtype,doctype,orderno,orderdate,itemtype,itemean,barcode,unit,expirydate,   
+								transno,peices,item_qty,item_count,item_cost,actual_qty,actual_count,actual_cost,costprice,userid,   
+								transid,transdate,collection,free_qty,posting) 
+		VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@myorderno,@myorderdate,@Myitemtype,@Myitemean,@Mybarcode,@myunit,@myexpirydate,
+								@Mytransno,@Mypeices,0,0,0,@Myactual_qty,@Myactual_count,0,@Mycostprice,@Myuserid,0,getdate(),999,@Myfree_qty,0)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+End
+
+--==============================================================================================
+-- Transfer In (2012)
+--==============================================================================================
+	Else IF @mydoctype = 2012 
+			Begin
+			
+		IF 	@Mystatus        =  0
+			Begin
+			
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+				INSERT INTO stk_weighted_det
+						(company,branch,transtype,doctype,orderno,orderdate,transno,itemean,barcode,qty,unit_price,userid,transdate)
+				VALUES	(@MyCompany,@mybranch,@MyTransType,@mydoctype,@myorderno,@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),@Myitemean,@Mybarcode,@Myactual_qty,@Mycostprice,@Myuserid,GETDATE())
+			END
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================			
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================			
+					SELECT @mycount =  count(*) from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					
+					update stk_order_items 
+					set     actual_qty = actual_qty + @Myactual_qty ,
+							free_qty   = free_qty + @Myfree_qty ,
+							actual_count = actual_count+1,
+							collection=999
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			IF  @mycount = 0 
+				Begin	
+
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 	
+				
+				--=================================================
+				--BEGIN OF MODIFICATION
+				--DATE: 05-04-2016
+				--Use whole cost price instead of cost price in transfer in
+				--================================================				       
+				--DECLARE @transferCostIn DECIMAL(18,3)
+				--SET @transferCostIn = 0
+				--SELECT @transferCostIn = ISNULL(weight, 0) from sys_item_units WHERE barcode=@Mybarcode
+				--IF @transferCostIn IS NULL
+				--BEGIN
+				--	SET @transferCostIn = 0
+				--END
+				
+				--IF @transferCostIn <> 0
+				--BEGIN
+				--	SET @Mycostprice = @transferCostIn
+				--END
+				--=================================================
+				--END OF MODIFICATION
+				--DATE: 05-04-2016
+				--================================================				       
+				
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+		INSERT INTO stk_order_items ( company,sector,region,branch,section,transtype,doctype,orderno,orderdate,itemtype,itemean,barcode,unit,expirydate,   
+								transno,peices,item_qty,item_count,item_cost,actual_qty,actual_count,actual_cost,costprice,userid,   
+								transid,transdate,collection,free_qty,posting) 
+		VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@myorderno,@myorderdate,@Myitemtype,@Myitemean,@Mybarcode,@myunit,@myexpirydate,
+								@Mytransno,@Mypeices,0,0,0,@Myactual_qty,@Myactual_count,0,@Mycostprice,@Myuserid,0,getdate(),999,@Myfree_qty,0)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+	End
+	
+--==============================================================================================
+-- Transfer Out (2052)
+--==============================================================================================
+	Else IF @mydoctype = 2052 
+			Begin
+				
+		IF 	@Mystatus        =  0
+			Begin
+			
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+				INSERT INTO stk_weighted_det
+						(company,branch,transtype,doctype,orderno,orderdate,transno,itemean,barcode,qty,unit_price,userid,transdate)
+				VALUES	(@MyCompany,@mybranch,@MyTransType,@mydoctype,@myorderno,@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),@Myitemean,@Mybarcode,@Myactual_qty,@Mycostprice,@Myuserid,GETDATE())
+			END
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================			
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================							
+				SELECT @mycount =  count(*) from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					
+					update stk_order_items 
+					set     actual_qty = actual_qty + @Myactual_qty ,
+							free_qty   = free_qty + @Myfree_qty  ,
+							actual_count = actual_count+1,
+							collection=999
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			IF  @mycount = 0 
+				Begin	
+
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 	
+				--=================================================
+				--BEGIN OF MODIFICATION
+				--DATE: 05-04-2016
+				--Use whole cost price instead of cost price in transfer in
+				--================================================				       
+				--DECLARE @transferCostOut DECIMAL(18,3)
+				--SET @transferCostOut = 0
+				--SELECT @transferCostOut = ISNULL(weight, 0) from sys_item_units WHERE barcode=@Mybarcode
+				--IF @transferCostOut IS NULL
+				--BEGIN
+				--	SET @transferCostOut = 0
+				--END
+				
+				--IF @transferCostOut <> 0
+				--BEGIN
+				--	SET @Mycostprice = @transferCostOut
+				--END
+				--=================================================
+				--END OF MODIFICATION
+				--DATE: 05-04-2016
+				--================================================				       
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+		INSERT INTO stk_order_items ( company,sector,region,branch,section,transtype,doctype,orderno,orderdate,itemtype,itemean,barcode,unit,expirydate,   
+								transno,peices,item_qty,item_count,item_cost,actual_qty,actual_count,actual_cost,costprice,userid,   
+								transid,transdate,collection,free_qty,posting) 
+		VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@myorderno,@myorderdate,@Myitemtype,@Myitemean,@Mybarcode,@myunit,@myexpirydate,
+								@Mytransno,@Mypeices,0,0,0,@Myactual_qty,@Myactual_count,0,@Mycostprice,@Myuserid,0,getdate(),999,@Myfree_qty,0)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+End
+--==============================================================================================
+-- Mark Down (2058)
+--==============================================================================================	
+Else IF @mydoctype = 2058 
+			Begin
+			
+	   	IF 	@Mystatus        =  0
+			Begin
+			
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+				INSERT INTO stk_weighted_det
+						(company,branch,transtype,doctype,orderno,orderdate,transno,itemean,barcode,qty,unit_price,userid,transdate)
+				VALUES	(@MyCompany,@mybranch,@MyTransType,@mydoctype,@myorderno,@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),@Myitemean,@Mybarcode,@Myactual_qty,@Mycostprice,@Myuserid,GETDATE())
+			END
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================			
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================										
+					SELECT @mycount =  count(*) from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					
+					update stk_order_items 
+					set     actual_qty = actual_qty + @Myactual_qty ,
+							free_qty   = free_qty + @Myfree_qty ,
+							actual_count = actual_count+1,
+							collection=999
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			IF  @mycount = 0 
+				Begin	
+
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_order_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+				       doctype   = @mydoctype and orderno   = @myorderno and  orderdate = @myorderdate 	
+		
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+		INSERT INTO stk_order_items ( company,sector,region,branch,section,transtype,doctype,orderno,orderdate,itemtype,itemean,barcode,unit,expirydate,   
+								transno,peices,item_qty,item_count,item_cost,actual_qty,actual_count,actual_cost,costprice,userid,   
+								transid,transdate,collection,free_qty,posting) 
+		VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@myorderno,@myorderdate,@Myitemtype,@Myitemean,@Mybarcode,@myunit,@myexpirydate,
+								@Mytransno,@Mypeices,0,0,0,@Myactual_qty,@Myactual_count,0,@Mycostprice,@Myuserid,0,getdate(),999,@Myfree_qty,0)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+End
+--==============================================================================================
+-- Create PO (1010)
+--==============================================================================================	
+Else IF @mydoctype = 1010 
+		Begin
+			
+		IF 	@Mystatus        =  0
+			Begin
+			
+			
+			--======================================
+			--Begin of modification of 20-07-2016
+			--To get supplier price
+			--======================================
+			SELECT
+			@supplierId = sites
+			FROM 
+			stk_reorder
+			WHERE
+			company	= @MyCompany and	sector		= @mysector  and  region		= @myregion and 
+	 		branch	= @mybranch  and	section		= @mysection and  transtype		= @MyTransType and
+			doctype	= @mydoctype and	reorderno	= @myorderno and  reorderdate	= @myorderdate
+					   
+			SELECT 
+			@Mycostprice = unitprice
+			FROM 
+			sys_item_suppliers
+			WHERE 
+			supplierno = @supplierId AND itemean = @Myitemean AND barcode = @Mybarcode
+			--======================================
+			--End of modification of 20-07-2016
+			--To get supplier price
+			--======================================
+			
+			
+			
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================										
+				SELECT @mycount =  count(*) from stk_reorder_items
+			     Where company   = @MyCompany and sector      = @mysector  and  region      = @myregion and 
+			 	       branch    = @mybranch  and section     = @mysection and  transtype   = @MyTransType and
+				       doctype   = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					update stk_reorder_items 
+					set     item_qty   = item_qty + @Myactual_qty ,
+							actual_cost = actual_cost + @Myfree_qty,
+							cost_price  = @Mycostprice,
+							collection=999
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+					
+
+					update stk_reorder_items 
+					set     item_cost = item_qty * @Mycostprice
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean	
+				End
+			
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+IF  @mycount = 0 
+				Begin	
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_reorder_items
+			     Where company   = @MyCompany and sector      = @mysector  and    region    = @myregion and 
+			 	       branch    = @mybranch  and section     = @mysection and    transtype = @MyTransType and
+				       doctype   = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate 	
+		
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			 
+	INSERT INTO 
+	stk_reorder_items	( company,		sector,		region,		branch,		section,	transtype,		doctype,	reorderno,	reorderdate,	itemtype,	itemean,	barcode,	unit,		transno,	peices,		item_qty,		item_count,			item_cost,			delivery_status,	delivery_date,	actual_qty,	actual_count,	actual_cost,	cost_price,		branch_weight,	userid,			transid,	transdate,	collection	) 
+	VALUES				( @MyCompany,	@mysector,	@myregion,	@mybranch,	@mysection,	@MyTransType,	@mydoctype,	@myorderno,	@myorderdate,	@Myitemtype,@Myitemean,	@Mybarcode,	@myunit,	@Mytransno,	@Mypeices,	@Myactual_qty,	@Myactual_count,	@Myactual_cost,		0,					@Myduedate,		0,			0,				@Myfree_qty,	@Mycostprice,	100,			@Myuserid,		1,			getdate(),	0			)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+
+					
+				
+		End 
+End
+--==============================================================================================
+-- Wish List (1052)
+--==============================================================================================	
+Else IF @mydoctype = 1052
+		Begin
+			
+		IF 	@Mystatus        =  0
+			Begin				
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================										
+				SELECT @mycount =  count(*) from stk_reorder_items
+			     Where company   = @MyCompany and sector      = @mysector  and  region      = @myregion and 
+			 	       branch    = @mybranch  and section     = @mysection and  transtype   = @MyTransType and
+				       doctype   = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+					   barcode   = @Mybarcode
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					update stk_reorder_items 
+					set     item_qty = item_qty + @Myactual_qty   ,
+							actual_cost = actual_qty * cost_price
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean 
+
+					update stk_reorder_items 
+					set     item_cost = item_qty * cost_price
+					 Where company     = @MyCompany and sector    = @mysector  and  region    = @myregion and 
+		 				   branch      = @mybranch  and section   = @mysection and  transtype = @MyTransType and
+						   doctype     = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate and 
+						   barcode     = @Mybarcode and itemean   = @Myitemean	
+					
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+				IF  @mycount = 0 
+				Begin	
+
+IF  @mycount = 0 
+				Begin	
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				 from stk_reorder_items
+			     Where company   = @MyCompany and sector      = @mysector  and    region    = @myregion and 
+			 	       branch    = @mybranch  and section     = @mysection and    transtype = @MyTransType and
+				       doctype   = @mydoctype and reorderno   = @myorderno and  reorderdate = @myorderdate 	
+		
+			Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+	INSERT INTO stk_reorder_items ( company,sector,region,branch,section,transtype,doctype,reorderno,reorderdate,itemtype,itemean,barcode,unit,   
+								transno,peices,item_qty,item_count,item_cost,delivery_status,delivery_date,actual_qty,actual_count,actual_cost,cost_price,
+								branch_weight,userid,transid,transdate,collection) 
+
+		VALUES				  ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@MyTransType,@mydoctype,@myorderno,@myorderdate,@Myitemtype,@Myitemean,@Mybarcode,@myunit,
+								@Mytransno,@Mypeices,@Myactual_qty,@Myactual_count,@Myactual_cost,0,@Myduedate,0,0,0,@Mycostprice,
+								100,@Myuserid,1,getdate(),0)  
+								IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+
+					
+				End
+		End 
+End
+--==============================================================================================
+-- Stock Check (2956)
+--==============================================================================================	
+Else IF @mydoctype = 2956 
+		Begin
+	
+		IF 	@Mystatus        =  0
+			Begin		
+			IF (@Mybarcode LIKE '23%')
+			BEGIN
+				INSERT INTO stk_weighted_det
+						(company,	branch,		transtype,		doctype,	orderno,	orderdate,	transno,itemean,	barcode,	qty,			unit_price,		userid,		transdate)
+				VALUES	(@MyCompany,@mybranch,	@MyTransType,	@mydoctype,	@myorderno,	@myorderdate,(SELECT ISNULL(COUNT(*),1) FROM stk_weighted_det WHERE (company=@MyCompany) AND (branch=@mybranch) AND (transtype=@MyTransType) AND (doctype = @mydoctype) AND (orderno = @myorderno) AND (orderdate = @myorderdate)),		@Myitemean,	@Mybarcode,	@Myactual_qty,	@Mycostprice,	@Myuserid,	GETDATE())		
+			END
+			--=================================================
+			--BEGIN OF MODIFICATION
+			--DATE: 21-09-2015
+			--================================================
+			--Insert item registeration method in sys_audit_trail 
+			IF (@finalSearchType <> 0)
+			BEGIN
+				INSERT INTO  sys_audit_trail		
+				(compay,		branch,		systemcode, doctype,	docno,		docdate,			transaction_id,		transdate,	userid,		itemean,	barcode,	qty,	site)
+				VALUES	
+				(@MyCompany,	@mybranch,	2,			@mydoctype,	@myorderno,		@myorderdate,	@finalSearchType,	GETDATE(),	@Myuserid,	@Myitemean,	@Mybarcode,	null,	null)
+			END
+			--=================================================
+			--END OF MODIFICATION
+			--DATE: 21-09-2015
+			--=================================================			
+			--==============================================================================================
+			-- Check if there's any records with the same keys
+			--==============================================================================================			 
+			select @mycount =  count(*) from stk_inventory_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  committee   = @myorderno and  
+					   inventory_date = @myorderdate  and barcode     = @Mybarcode and itemean   = @Myitemean 
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+				Begin
+					update stk_inventory_items 
+					set     inventory_qty = inventory_qty + @Myactual_qty 
+					Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch		= @mybranch  and section   = @mysection and  committee   = @myorderno and  
+					   inventory_date = @myorderdate  and barcode     = @Mybarcode and itemean   = @Myitemean 
+
+					update stk_inventory_items 
+					set  inventory_cost = inventory_qty * costprice,
+					inventory_count=inventory_count+1
+					Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch		= @mybranch  and section   = @mysection and  committee   = @myorderno and  
+					   inventory_date = @myorderdate  and barcode     = @Mybarcode and itemean   = @Myitemean 
+				End
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			Else IF @mycount    = 0	
+				Begin	
+
+			SELECT @Mytransno = Isnull(max(collection),0) + 1
+				 from stk_inventory_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  committee   = @myorderno and  
+					   inventory_date = @myorderdate
+
+				Set	@Myactual_cost = @Myactual_qty * @Mycostprice
+			
+				INSERT INTO stk_inventory_items ( company,sector,region,branch,section,item_section,inventory_type,inventory_date,committee,itemean,expirydate,
+					  unit,onhand_qty,onhand_count,onhand_cost,inventory_qty,inventory_count,inventory_cost,costprice,collection,peices,barcode  )
+				VALUES		                    ( @MyCompany,@mysector,@myregion,@mybranch,@mysection,@mysection,@MyInventory_type,@myorderdate,@myorderno,@Myitemean,@myexpirydate,
+					 @myunit,0,0,0,@Myactual_qty,@Myactual_count,@Myactual_cost,@Mycostprice,@Mytransno,@Mypeices,@Mybarcode )  
+					IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+End
+Else IF @mydoctype = 8504 
+		Begin
+				
+		IF 	@Mystatus        =  0
+			Begin				
+
+			select @mycount =  count(*) from sys_discount_items
+			Where      discountno    = @myorderno		and department   = @mydepartment  and
+					   barcode		 = @Mybarcode 
+			IF @mycount    = 0	
+				Begin	
+
+				INSERT INTO sys_discount_items  ( discountno,department,barcode,discountvalue,usage )
+				VALUES				            ( @myorderno,@mydepartment,@Mybarcode,@Mydiscount_value,0)  
+						IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+			Else IF @mycount    > 0	
+				Begin
+						Update sys_discount_items 
+						Set discountvalue = @Mydiscount_value
+						Where      discountno    = @myorderno	and department   = @mydepartment  and
+								   barcode		 = @Mybarcode  
+				End
+		End 
+	End
+	-------------------------------------------------
+Else IF @mydoctype = 1049 
+		Begin
+
+		SET @mydoctype = 1060
+		
+		IF 	@Mystatus        =  0
+			Begin				
+			
+			DECLARE @myItemBalance	decimal(18,3)
+			DECLARE @myTodayTemp	datetime
+			SET @myTodayTemp = GETDATE()
+				
+			exec sp_get_item_balance @myBranch ,@myBarcode, @myTodayTemp, @myItemBalance out
+
+			select @mycount =  count(*) from pur_request_items
+			     Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  requestno   = @myorderno and  
+					   requestdate = @myorderdate  and barcode     = @Mybarcode and itemean   = @Myitemean 
+
+			IF @mycount > 0 
+				Begin
+					update pur_request_items 
+					set     item_qty = item_qty + @Myactual_qty,
+							request_qty = request_qty + @Myactual_qty,
+							balance_qty = @myItemBalance
+					Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch		= @mybranch  and section   = @mysection and  requestno   = @myorderno and  
+					   requestdate = @myorderdate  and barcode     = @Mybarcode and itemean   = @Myitemean 
+
+				End
+			Else IF @mycount    = 0	
+				Begin	
+
+				SELECT @Mytransno = Isnull(max(transno),0) + 1
+				from pur_request_items
+			    Where company   = @MyCompany and sector    = @mysector  and  region      = @myregion and 
+			 	       branch    = @mybranch  and section   = @mysection and  requestno   = @myorderno and  
+					   requestdate = @myorderdate
+					   
+				INSERT INTO pur_request_items ( company ,	sector ,	region ,	branch ,	section ,	transtype ,		doctype ,	requestno , requestdate , itemean ,		transno ,	itemtype ,		barcode ,	unit ,		peices ,	item_qty ,		item_count ,	item_cost ,		balance_qty ,	balance_count , request_qty ,	request_count ,		costprice ,		transdate	) 
+				VALUES		                  ( @MyCompany, @mysector,	@myregion,	@mybranch,	@mysection, @MyTransType,	@mydoctype, @myorderno, @myorderdate, @Myitemean,	@Mytransno, @Myitemtype,	@Mybarcode, @myunit,	@Mypeices,	@Myactual_qty,	@Mysite,		@Mycostprice,	@myItemBalance, 0,				@Myactual_qty,	1,					@Mycostprice,	GETDATE()	)
+
+					IF  @@rowcount < 1
+							Begin
+								Set @MYinsertstatus = 1
+								Set @Myerrormessage = 'Error .. insert in data base' 
+							End
+				End
+		End 
+End
+---------------------
+--==============================================================================================
+-- Transfer Out via Request (1061)
+--==============================================================================================
+	ELSE IF @Mydoctype = 1061 
+	BEGIN		
+		DECLARE @Mydoctype2 int
+		
+		SET @Mydoctype2 = 2052
+		SET @Mydoctype =  1060
+			
+		IF 	@Mystatus        =  0
+		BEGIN
+		--==============================================================================================
+		-- Check if there's any records with the same keys
+		--==============================================================================================							
+			SELECT @mycount =  COUNT(*) FROM stk_order_items
+			WHERE	company   = @MyCompany		AND sector    = @mysector  AND  region    = @Myregion AND 
+					branch    = @mybranch		AND section   = @mysection AND  transtype = @MyTransType AND
+					doctype   = @Mydoctype2		AND orderno   = @myorderno AND  orderdate = @myorderdate AND 
+					barcode   = @mybarcode
+			
+			DECLARE @RequestId INT
+			DECLARE @RequestDate DATETIME
+			DECLARE @itemQty DECIMAL(18, 3)
+			DECLARE @mySiteX INT
+			DECLARE @itemStatusX INT
+			
+			SELECT 
+			@RequestId = ISNULL(reorderno, 0),
+			@RequestDate = ISNULL(reorderdate, GETDATE()),
+			@mySiteX = ISNULL(sites, 0)
+			FROM stk_order
+			WHERE	company   = @MyCompany		AND sector    = @mysector  AND  region    = @Myregion AND 
+				branch    = @mybranch		AND section   = @mysection AND  transtype = @MyTransType AND
+				doctype   = @Mydoctype2		AND orderno   = @myorderno AND  orderdate = @myorderdate
+			
+			SELECT 
+			@itemQty = ISNULL(item_qty, 0)
+			FROM pur_request_items
+			WHERE	company     = @MyCompany AND 
+	 				branch      = @mySiteX   AND section   = @mysection AND  transtype = @MyTransType AND
+					doctype     = @mydoctype AND requestno   = @RequestId AND  requestdate = @RequestDate AND
+					barcode     = @mybarcode AND itemean   = @Myitemean
+			--==============================================================================================
+			-- If yes, update the record with the new values
+			--==============================================================================================
+			IF @mycount > 0 
+			BEGIN		
+				UPDATE	stk_order_items 
+				SET		actual_qty = actual_qty + @Myactual_qty
+				WHERE	company     = @MyCompany AND sector    = @mysector  AND  region    = @Myregion AND 
+		 				branch      = @mybranch  AND section   = @mysection AND  transtype = @MyTransType AND
+						doctype     = @Mydoctype2 AND orderno   = @myorderno AND  orderdate = @myorderdate AND 
+						barcode     = @mybarcode AND itemean   = @Myitemean 
+								 
+			END
+			--==============================================================================================
+			-- Else If no, insert the new values to a new record
+			--==============================================================================================
+			IF  @mycount = 0 
+			BEGIN	
+				SELECT	@Mytransno = ISNULL(MAX(transno),0) + 1
+				FROM	stk_order_items
+			    WHERE	company   = @MyCompany AND sector    = @mysector  AND  region    = @Myregion AND 
+			 			branch    = @mybranch  AND section   = @mysection AND  transtype = @MyTransType AND
+						doctype   = @mydoctype AND orderno   = @myorderno AND  orderdate = @myorderdate 	
+				SET	@Myactual_cost = @Myactual_qty * @Mycostprice
+				INSERT INTO stk_order_items ( company	,	sector		,	region		,	branch		,	section		,	transtype	,	doctype		,	orderno		,	orderdate	,	itemtype	,	itemean		,	barcode		,	unit	,	expirydate		,   transno		,	peices		,	item_qty	,	item_count	,	item_cost	, actual_qty,		actual_count,		actual_cost	,	costprice	,	userid		,   transid	,	transdate	,	collection	,	free_qty	,	posting	) 
+				VALUES						( @MyCompany,	@mysector	,	@Myregion	,	@mybranch	,	@mysection	,	@MyTransType,	@Mydoctype2	,	@myorderno	,	@myorderdate,	@Myitemtype	,	@Myitemean	,	@Mybarcode	,	@Myunit	,	@Myexpirydate	,	@Mytransno	,	@Mypeices	,	@itemQty	,	0			,	@Mycostprice, @Myactual_qty,	@Myactual_count	,	@Mycostprice,	@Mycostprice,	@Myuserid	,	0		,	GETDATE()	,	0			,	@Myfree_qty	,	0		)  
+				IF  @@ROWCOUNT < 1
+				BEGIN
+					SET @MYinsertstatus = 1
+					SET @Myerrormessage = 'Error .. insert in data base' 
+				END
+			END
+			
+			UPDATE	pur_request_items 
+				SET		
+				actual_qty = actual_qty + @Myactual_qty
+				WHERE	company     = @MyCompany AND 
+		 				branch      = @Mysite  AND section   = @mysection AND  transtype = @MyTransType AND
+						doctype     = @mydoctype AND requestno   = @RequestId AND  requestdate = @RequestDate AND 
+						barcode     = @mybarcode AND itemean   = @Myitemean 
+						
+				UPDATE	pur_request_items 
+				SET		
+				request_qty = item_qty - actual_qty
+				WHERE	company     = @MyCompany AND 
+		 				branch      = @Mysite  AND section   = @mysection AND  transtype = @MyTransType AND
+						doctype     = @mydoctype AND requestno   = @RequestId AND  requestdate = @RequestDate AND 
+						barcode     = @mybarcode AND itemean   = @Myitemean 
+						
+				UPDATE	pur_request_items 
+				SET		
+				item_status = CASE WHEN request_qty > 0 THEN 2 ELSE 1 END
+				WHERE	company     = @MyCompany AND 
+		 				branch      = @Mysite  AND section   = @mysection AND  transtype = @MyTransType AND
+						doctype     = @mydoctype AND requestno   = @RequestId AND  requestdate = @RequestDate AND 
+						barcode     = @mybarcode AND itemean   = @Myitemean 
+						
+		END 
+	END
+--------------------
+
+End

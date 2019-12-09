@@ -2,16 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using SwaggerTest.Models;
+using PdaHub.DataAccess;
+using PdaHub.Models;
 
-namespace SwaggerTest.Controllers
+namespace PdaHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [AllowAnonymous]
     public class StockController : ControllerBase
     {
+        private readonly StockData _stockData;
+
+        public StockController(StockData stockData)
+        {
+            _stockData = stockData;
+        }
     
     [HttpGet]
       public string Get()
@@ -21,9 +30,25 @@ namespace SwaggerTest.Controllers
 
 
       [HttpPost]
-      public int Post (StockModel model){
-        return model.OrderNo;
-      }
+    //  [Route("StockReview")]
+      //public int Post ( StockReviewModel model){
+
+      //      Task.Run(() => sendUpdate(model)); 
+
+      //  return 1;
+      //}
+
+        [HttpPost]
+        public async Task<StockDetailModel> sendUpdate(StockReviewModel model)
+        {
+
+            var data = await _stockData.GetOrderDetailAsync(model);
+            _stockData.SaveToExcel(data);
+
+            return data;
+        }
+
+        
 
     }
 }

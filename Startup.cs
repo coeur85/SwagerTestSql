@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using PdaHub.DataAccess;
+using PdaHub.Helpers;
 
 namespace SwaggerTest
 {
@@ -38,6 +40,10 @@ namespace SwaggerTest
                 });
 
             });
+
+            services.AddSingleton<iHelper,Helper>();
+            services.AddSingleton<StockData>();
+            services.AddSingleton<BasicData>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -60,7 +66,7 @@ namespace SwaggerTest
             });
           
 
-            app.UseSwagger();
+           app.UseSwagger();
            app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Test API V1");
