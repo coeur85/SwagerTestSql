@@ -79,7 +79,14 @@ namespace PdaHub.Models {
 
 
 
-    public class StockDetailModel
+    public class StockInOutDetailModel
+    {
+
+        public StockDetailModel StockOrderIn { get; set; }
+        public StockDetailModel StockOrderOut { get; set; }
+
+    }
+        public class StockDetailModel
     {
         public StockOrderModel StockOrder { get; set; }
         public List<StockOrderItemsModel> StockOrderItems { get; set; } = new List<StockOrderItemsModel>();

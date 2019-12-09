@@ -39,10 +39,10 @@ namespace PdaHub.Controllers
       //}
 
         [HttpPost]
-        public async Task<StockDetailModel> sendUpdate(StockReviewModel model)
+        public async Task<StockInOutDetailModel> sendUpdate(StockReviewModel model)
         {
 
-            var data = await _stockData.GetOrderDetailAsync(model);
+            var data = await _stockData.GetInOutOrderDetailAsync(model);
             _stockData.SaveToExcel(data);
 
             return data;
