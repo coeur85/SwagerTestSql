@@ -132,13 +132,14 @@ namespace PdaHub.DataAccess
                 ws.Cells[5, 5].Value = "كود الوحده";
                 ws.Cells[5, 6].Value = "الوحده";
                 HeaderFormate(ws.Cells[5, 1, 5, 6], Color.Black);
+                ws.Cells[5,1,5,6].AutoFilter = true;
 
 
                 ws.Cells[5, 7].Value = "كميه فعليه مستلمه";
                 ws.Cells[5, 8].Value = "كميه بونص مستلمة";
                 ws.Cells[5, 9].Value = "اجمالي الاستلام";
                 HeaderFormate(ws.Cells[5, 7, 5, 9], Color.DarkCyan);
-
+                ws.Cells[5, 7, 5, 9].AutoFilter = true;
                 int i = 6; int index = 1;
                
                 if(model.StockOrderOut == null)
@@ -171,6 +172,8 @@ namespace PdaHub.DataAccess
                     ws.Cells[5, 14].Value = "فرق كميه بونص";
                     ws.Cells[5, 15].Value = "فرق اجمالي";
                     HeaderFormate(ws.Cells[5, 13, 5, 15], Color.DarkSalmon);
+
+                    ws.Cells[5, 10, 5, 15].AutoFilter = true;
 
                     List<string> barcodes = model.StockOrderIn.StockOrderItems.Select(x => x.Barcode).ToList();
                     barcodes.AddRange(model.StockOrderOut.StockOrderItems.Select(x => x.Barcode));
@@ -242,6 +245,8 @@ namespace PdaHub.DataAccess
 
 
                 ws.Protection.IsProtected = true;
+                ws.Protection.AllowAutoFilter = true;
+
                 ws.Protection.SetPassword("ahmed");
 
                 ws.Cells[ws.Dimension.Address].AutoFitColumns();
