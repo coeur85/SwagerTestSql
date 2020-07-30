@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PdaHub.DataAccess;
 using PdaHub.Models;
+using SimpleImpersonation;
 
 namespace PdaHub.Controllers
 {
@@ -43,7 +44,13 @@ namespace PdaHub.Controllers
         {
 
             var data = await _stockData.GetInOutOrderDetailAsync(model);
-            _stockData.SaveToExcel(data);
+
+            var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
+           Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
+            {
+               _stockData.SaveToExcel(data);
+           });
+            
 
             return data;
         }

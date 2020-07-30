@@ -1,3 +1,4 @@
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -90,5 +91,11 @@ namespace PdaHub.Models {
     {
         public StockOrderModel StockOrder { get; set; }
         public List<StockOrderItemsModel> StockOrderItems { get; set; } = new List<StockOrderItemsModel>();
+    }
+
+    public class XlsFile
+    {
+        public string FileName { get; set; }
+        public ExcelPackage FileData { get; set; } = new ExcelPackage();
     }
 }
