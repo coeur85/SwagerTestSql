@@ -16,46 +16,27 @@ namespace PdaHub.Controllers
     [AllowAnonymous]
     public class StockController : ControllerBase
     {
-        private readonly StockData _stockData;
-
-        public StockController(StockData stockData)
+    private readonly StockData _stockData;
+    public StockController(StockData stockData)
         {
             _stockData = stockData;
         }
     
     [HttpGet]
-      public string Get()
+    public string Get()
       {
           return "Stock Controller Get method";
       }
-
-
-      [HttpPost]
-    //  [Route("StockReview")]
-      //public int Post ( StockReviewModel model){
-
-      //      Task.Run(() => sendUpdate(model)); 
-
-      //  return 1;
-      //}
-
-        [HttpPost]
-        public async Task<StockInOutDetailModel> sendUpdate(StockReviewModel model)
+    [HttpPost]
+    public async Task<StockInOutDetailModel> sendUpdate(StockReviewModel model)
+    {
+        var data = await _stockData.GetInOutOrderDetailAsync(model);
+        var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
+        Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
         {
-
-            var data = await _stockData.GetInOutOrderDetailAsync(model);
-
-            var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
-           Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
-            {
-               _stockData.SaveToExcel(data);
-           });
-            
-
-            return data;
-        }
-
-        
-
+            _stockData.SaveToExcel(data);
+        });
+        return data;
+    }
     }
 }

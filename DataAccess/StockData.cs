@@ -19,7 +19,6 @@ namespace PdaHub.DataAccess
     {
         private readonly iHelper _helper;
         private readonly BasicData _basicData;
-
         public StockData(iHelper helper, BasicData basicData)
         {
             _helper = helper;
@@ -27,9 +26,8 @@ namespace PdaHub.DataAccess
         }
 
 
-        public async Task<StockDetailModel> GetOrderDetailAsync(StockReviewModel model, string connectionString)
+       public async Task<StockDetailModel> GetOrderDetailAsync(StockReviewModel model, string connectionString)
         {
-
             StockDetailModel stockDetailModel = new StockDetailModel();
             using (IDbConnection connection = new SqlConnection(connectionString))
             {
@@ -42,8 +40,6 @@ namespace PdaHub.DataAccess
                 stockDetailModel.StockOrderItems = connection.QueryAsync<StockOrderItemsModel>("select itemean,trim(barcode) as [barcode] ,unit,actual_qty,free_qty from stk_order_items " +
                     "where orderno = @orderno and orderdate = @orderdate and branch = @BranchCode and doctype = @DocType", model).Result.ToList();
             }
-
-
             if(stockDetailModel.StockOrder != null)
             {
                  stockDetailModel.StockOrder.BranchName = await _basicData.GetBranchNameAsync(stockDetailModel.StockOrder.Branch);
@@ -61,22 +57,13 @@ namespace PdaHub.DataAccess
             else
             {
                 return null;
-            }
-           
-
-           
+            }  
         }
-
-        public async Task<StockInOutDetailModel> GetInOutOrderDetailAsync(StockReviewModel model)
+       public async Task<StockInOutDetailModel> GetInOutOrderDetailAsync(StockReviewModel model)
         {
 
             StockInOutDetailModel stockDetailModel = new StockInOutDetailModel();
-
             stockDetailModel.StockOrderIn = await GetOrderDetailAsync(model,_helper.PdaNubConnection());
-           
-            
-
-
                 if(stockDetailModel.StockOrderIn.StockOrder.Invoicedate.HasValue &&
                 stockDetailModel.StockOrderIn.StockOrder.Invoiceno.HasValue)
                 {
@@ -87,18 +74,13 @@ namespace PdaHub.DataAccess
                      OrderDate  =stockDetailModel.StockOrderIn.StockOrder.Invoicedate.Value
                  }, _helper.BranchLocalDB());
                 }
-            else
-            {
-                stockDetailModel.StockOrderOut = null;
-            }
-
-
+                else
+                {
+                    stockDetailModel.StockOrderOut = null;
+                }
                 return stockDetailModel;
         }
-
-
-
-        public void SaveToExcel(StockInOutDetailModel model)
+       public void SaveToExcel(StockInOutDetailModel model)
         {
             using var p = new ExcelPackage();
             //A workbook must have at least on cell, so lets add one... 
@@ -287,9 +269,7 @@ namespace PdaHub.DataAccess
 
 
         }
-
-
-        void HeaderFormate(ExcelRange range,Color BackGroudcolor )
+       private void HeaderFormate(ExcelRange range,Color BackGroudcolor )
         {
            
                 range.Style.Font.Bold = true;

@@ -17,7 +17,6 @@ namespace PdaHub.DataAccess
         {
             _helper = helper;
         }
-
         public async Task<String> GetBarcodeItemNameAsync(string barcode)
         {
             using (IDbConnection connection = new SqlConnection(_helper.BranchLocalDB()) ) 
@@ -38,7 +37,6 @@ namespace PdaHub.DataAccess
                 return output;
             }
         }
-
         public async Task<string> GetUnitNameAsync(int unit)
         {
             using (IDbConnection connection = new SqlConnection(_helper.BranchLocalDB()))

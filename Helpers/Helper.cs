@@ -16,19 +16,12 @@ namespace PdaHub.Helpers
             _configuration = configuration;
         }
 
-        public  string PdaNubConnection()
-        {
-            return _configuration.GetConnectionString("PdaHub");
-        }
-
-        public string BranchLocalDB()
-        {
-            return _configuration.GetConnectionString("LocalRetail");
-        }
-
-        public string ExcelSaveRoot()
-        {
-            return _configuration.GetSection("ExcelSaveRoot").Value;
-        }
+        public  string PdaNubConnection() => 
+            _configuration.GetConnectionString("PdaHub");
+        public string BranchLocalDB() =>
+            _configuration.GetConnectionString("LocalRetail");
+        public string ExcelSaveRoot() =>
+          _configuration.GetSection("ExcelSaveRoot").Value;
+        
     }
 }

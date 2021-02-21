@@ -4,40 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace PdaHub.Models {
-
-
-    //public class StockOrderModel{
-    //    public int Company { get; set; }
-    //    public int Sector { get; set; }
-    //    public int Region { get; set; }
-    //    public int Branch { get; set; }
-    //    public int Section { get; set; }
-    //    public int Transtype { get; set; }
-    //    public int Doctype { get; set; }
-    //    public int Goodstype { get; set; }
-    //    public int Sites { get; set; }
-    //    public int? Sites_section { get; set; }
-    //    public int Orderno { get; set; }
-    //    public DateTime Orderdate { get; set; }
-    //    public int? Userid { get; set; }
-    //    public int? Reordertype { get; set; }
-    //    public int? Reorderno { get; set; }
-    //    public DateTime? Reorderdate { get; set; }
-    //    public int? Invoiceno { get; set; }
-    //    public DateTime? Invoicedate { get; set; }
-    //    public int? Review { get; set; }
-    //    public int? Posting { get; set; }
-    //    public int? New_entry { get; set; }
-    //    public int? Transid { get; set; }
-    //    public int? Shipmentno { get; set; }
-    //    public object Examinationno { get; set; }
-    //    public int? Status { get; set; }
-    //    public int? Collection { get; set; }
-    //    public object StoreOrder { get; set; }
-
-    //}
-
-
     public class StockReviewModel
     {
         public int BranchCode { get; set; }
@@ -77,22 +43,16 @@ namespace PdaHub.Models {
 
 
     }
-
-
-
     public class StockInOutDetailModel
     {
-
         public StockDetailModel StockOrderIn { get; set; }
         public StockDetailModel StockOrderOut { get; set; }
-
     }
-        public class StockDetailModel
+    public class StockDetailModel
     {
         public StockOrderModel StockOrder { get; set; }
         public List<StockOrderItemsModel> StockOrderItems { get; set; } = new List<StockOrderItemsModel>();
     }
-
     public class XlsFile
     {
         public string FileName { get; set; }
