@@ -13,20 +13,20 @@ using OfficeOpenXml.Style;
 using System.Drawing;
 
 
-namespace PdaHub.DataAccess
+namespace PdaHub.Repositories
 {
-    public class StockData
+    public class StockDataRepository : IStockDataRepository
     {
         private readonly iHelper _helper;
-        private readonly BasicData _basicData;
-        public StockData(iHelper helper, BasicData basicData)
+        private readonly IBasicDataRepository _basicData;
+        public StockDataRepository(iHelper helper, IBasicDataRepository basicData)
         {
             _helper = helper;
             _basicData = basicData;
         }
 
 
-       public async Task<StockDetailModel> GetOrderDetailAsync(StockReviewModel model, string connectionString)
+        public async Task<StockDetailModel> GetOrderDetailAsync(StockReviewModel model, string connectionString)
         {
             StockDetailModel stockDetailModel = new StockDetailModel();
             using (IDbConnection connection = new SqlConnection(connectionString))
@@ -40,9 +40,9 @@ namespace PdaHub.DataAccess
                 stockDetailModel.StockOrderItems = connection.QueryAsync<StockOrderItemsModel>("select itemean,trim(barcode) as [barcode] ,unit,actual_qty,free_qty from stk_order_items " +
                     "where orderno = @orderno and orderdate = @orderdate and branch = @BranchCode and doctype = @DocType", model).Result.ToList();
             }
-            if(stockDetailModel.StockOrder != null)
+            if (stockDetailModel.StockOrder != null)
             {
-                 stockDetailModel.StockOrder.BranchName = await _basicData.GetBranchNameAsync(stockDetailModel.StockOrder.Branch);
+                stockDetailModel.StockOrder.BranchName = await _basicData.GetBranchNameAsync(stockDetailModel.StockOrder.Branch);
                 stockDetailModel.StockOrder.SiteName = await _basicData.GetBranchNameAsync(stockDetailModel.StockOrder.Sites);
 
 
@@ -50,37 +50,38 @@ namespace PdaHub.DataAccess
                 {
                     item.ItemName = await _basicData.GetBarcodeItemNameAsync(item.Barcode);
                     item.UnitName = await _basicData.GetUnitNameAsync(item.Unit);
-                } 
+                }
                 return stockDetailModel;
 
             }
             else
             {
                 return null;
-            }  
+            }
         }
-       public async Task<StockInOutDetailModel> GetInOutOrderDetailAsync(StockReviewModel model)
+        public async Task<StockInOutDetailModel> GetInOutOrderDetailAsync(StockReviewModel model)
         {
 
             StockInOutDetailModel stockDetailModel = new StockInOutDetailModel();
-            stockDetailModel.StockOrderIn = await GetOrderDetailAsync(model,_helper.PdaNubConnection());
-                if(stockDetailModel.StockOrderIn.StockOrder.Invoicedate.HasValue &&
-                stockDetailModel.StockOrderIn.StockOrder.Invoiceno.HasValue)
+            stockDetailModel.StockOrderIn = await GetOrderDetailAsync(model, _helper.PdaNubConnection());
+            if (stockDetailModel.StockOrderIn.StockOrder.Invoicedate.HasValue &&
+            stockDetailModel.StockOrderIn.StockOrder.Invoiceno.HasValue)
+            {
+                stockDetailModel.StockOrderOut = await GetOrderDetailAsync(new StockReviewModel
                 {
-                stockDetailModel.StockOrderOut = await GetOrderDetailAsync(new StockReviewModel {
-                     BranchCode= stockDetailModel.StockOrderIn.StockOrder.Sites,
-                     DocType = 2052,
-                     OrderNo = stockDetailModel.StockOrderIn.StockOrder.Invoiceno.Value,
-                     OrderDate  =stockDetailModel.StockOrderIn.StockOrder.Invoicedate.Value
-                 }, _helper.BranchLocalDB());
-                }
-                else
-                {
-                    stockDetailModel.StockOrderOut = null;
-                }
-                return stockDetailModel;
+                    BranchCode = stockDetailModel.StockOrderIn.StockOrder.Sites,
+                    DocType = 2052,
+                    OrderNo = stockDetailModel.StockOrderIn.StockOrder.Invoiceno.Value,
+                    OrderDate = stockDetailModel.StockOrderIn.StockOrder.Invoicedate.Value
+                }, _helper.BranchLocalDB());
+            }
+            else
+            {
+                stockDetailModel.StockOrderOut = null;
+            }
+            return stockDetailModel;
         }
-       public void SaveToExcel(StockInOutDetailModel model)
+        public void SaveToExcel(StockInOutDetailModel model)
         {
             using var p = new ExcelPackage();
             //A workbook must have at least on cell, so lets add one... 
@@ -250,33 +251,33 @@ namespace PdaHub.DataAccess
                 model.StockOrderIn.StockOrder.DocType.ToString() + "." +
                 model.StockOrderIn.StockOrder.Orderdate.ToString("yyyy.MM.dd") + "." +
                 model.StockOrderIn.StockOrder.Orderno.ToString();
-            if(model.StockOrderOut != null)
+            if (model.StockOrderOut != null)
             {
                 filename += "__";
-                filename+=(  model.StockOrderOut.StockOrder.Branch.ToString() + "." +
+                filename += (model.StockOrderOut.StockOrder.Branch.ToString() + "." +
               model.StockOrderOut.StockOrder.Orderdate.ToString("yyyy.MM.dd") + "." +
               model.StockOrderOut.StockOrder.Orderno.ToString());
 
             }
 
-           
 
-            filename +=     ".xlsx";
-           
-           
-                p.SaveAs(new FileInfo(filename));
-           
+
+            filename += ".xlsx";
+
+
+            p.SaveAs(new FileInfo(filename));
+
 
 
         }
-       private void HeaderFormate(ExcelRange range,Color BackGroudcolor )
+        private void HeaderFormate(ExcelRange range, Color BackGroudcolor)
         {
-           
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(BackGroudcolor);
-                range.Style.Font.Color.SetColor(Color.White);
-            
+
+            range.Style.Font.Bold = true;
+            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+            range.Style.Fill.BackgroundColor.SetColor(BackGroudcolor);
+            range.Style.Font.Color.SetColor(Color.White);
+
         }
 
 

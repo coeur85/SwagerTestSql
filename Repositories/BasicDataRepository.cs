@@ -7,19 +7,19 @@ using Dapper;
 using System.Data;
 using Microsoft.Data.SqlClient;
 
-namespace PdaHub.DataAccess
+namespace PdaHub.Repositories
 {
-    public class BasicData
+    public class BasicDataRepository : IBasicDataRepository
     {
         private readonly iHelper _helper;
 
-        public BasicData(iHelper helper)
+        public BasicDataRepository(iHelper helper)
         {
             _helper = helper;
         }
         public async Task<String> GetBarcodeItemNameAsync(string barcode)
         {
-            using (IDbConnection connection = new SqlConnection(_helper.BranchLocalDB()) ) 
+            using (IDbConnection connection = new SqlConnection(_helper.BranchLocalDB()))
             {
 
                 var output = await connection.QuerySingleAsync<string>("select i.a_name from sys_item i inner " +
@@ -30,7 +30,7 @@ namespace PdaHub.DataAccess
         }
         public async Task<string> GetBranchNameAsync(int branchCode)
         {
-            using (IDbConnection connection = new SqlConnection(_helper.BranchLocalDB())) 
+            using (IDbConnection connection = new SqlConnection(_helper.BranchLocalDB()))
             {
                 var output = await connection.QuerySingleAsync<string>("select a_name from sys_branch where branch" +
                     " = @branchCode", new { branchCode });

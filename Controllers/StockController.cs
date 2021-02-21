@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using PdaHub.DataAccess;
+using PdaHub.Repositories;
 using PdaHub.Models;
 using SimpleImpersonation;
 
@@ -16,8 +16,8 @@ namespace PdaHub.Controllers
     [AllowAnonymous]
     public class StockController : ControllerBase
     {
-    private readonly StockData _stockData;
-    public StockController(StockData stockData)
+    private readonly StockDataRepository _stockData;
+    public StockController(StockDataRepository stockData)
         {
             _stockData = stockData;
         }
