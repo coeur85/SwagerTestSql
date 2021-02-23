@@ -16,7 +16,7 @@ namespace PdaHub.Helpers
             _configuration = configuration;
         }
 
-        public  string PdaNubConnection() => 
+        public  string PdaHubConnection() => 
             _configuration.GetConnectionString("PdaHub");
         public string BranchLocalDB() =>
             _configuration.GetConnectionString("LocalRetail");

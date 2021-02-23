@@ -34,8 +34,8 @@ namespace SwaggerTest
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "API",
-                    Description = "Test API with ASP.NET Core 3.0",
+                    Title = "bGomla API",
+                    Description = "Stock , BasicData",
                    
                 });
 
@@ -69,7 +69,7 @@ namespace SwaggerTest
            app.UseSwagger();
            app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Test API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "bGomla API V1");
             });
           
         }

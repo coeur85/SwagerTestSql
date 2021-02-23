@@ -63,7 +63,7 @@ namespace PdaHub.Repositories
         {
 
             StockInOutDetailModel stockDetailModel = new StockInOutDetailModel();
-            stockDetailModel.StockOrderIn = await GetOrderDetailAsync(model, _helper.PdaNubConnection());
+            stockDetailModel.StockOrderIn = await GetOrderDetailAsync(model, _helper.PdaHubConnection());
             if (stockDetailModel.StockOrderIn.StockOrder.Invoicedate.HasValue &&
             stockDetailModel.StockOrderIn.StockOrder.Invoiceno.HasValue)
             {
