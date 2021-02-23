@@ -17,7 +17,7 @@ namespace PdaHub.Models
         public decimal Price { get; set; }
 
     }
-    public class PosItemEnitity
+    public class PosItemEnitityModel
     {
 		public string barcode { get; set; }
 		public string a_name { get; set; }
@@ -55,5 +55,16 @@ namespace PdaHub.Models
 		public short? category { get; set; }
 		public DateTime last_modified_time { get; set; }
 
+	}
+
+	public class ItemSectionEnitiyModel
+    {
+
+		public short? itemclass { get; set; }
+		public short section { get; set; }
+		public string a_name { get; set; }
+		public string l_name { get; set; }
+		public short? usage { get; set; }
+		public DateTime? transdate { get; set; }
 	}
 }
