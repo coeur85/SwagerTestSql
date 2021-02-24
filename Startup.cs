@@ -43,7 +43,8 @@ namespace SwaggerTest
             });
 
             services.AddSingleton<iHelper,Helper>();
-            services.AddSingleton<IStockDataRepository,StockDataRepository>();
+            services.AddSingleton<IStockRepository,StockRepository>();
+            services.AddSingleton<IStockService,StockService>();
             services.AddSingleton<IBasicDataRepository,BasicDataRepository>();
             services.AddSingleton<IItemsRepository,ItemsRepository>();
             services.AddSingleton<IItemsServices,ItemsServices>();
