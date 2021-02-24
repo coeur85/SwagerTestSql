@@ -24,15 +24,26 @@ namespace PdaHub.Services
             TryCatch(async () =>
             {
                 var data = await _stockReository.GetInOutOrderDetailAsync(model);
-                RunAsAdminUser(() => SaveToExcel(data));
+              
+
+                var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
+               
+
+                Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
+                {
+                    SaveToExcel(data);
+                });
                 return new SucessResponseModel { Data = data };
             });
-        private void RunAsAdminUser(Action model)
+        private void RunAsAdminUser(StockInOutDetailModel model)
         {
-            var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
+           var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
+          // var credentials = new UserCredentials(@"bGomla\am.dadmin", @"Az0103061!");
+
             Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
             {
-                model();
+                // model();
+                SaveToExcel(model);
             });
 
         }
