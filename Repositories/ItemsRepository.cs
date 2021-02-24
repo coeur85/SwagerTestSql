@@ -31,7 +31,7 @@ namespace PdaHub.Repositories
         {
             using (IDbConnection connection = new SqlConnection(_iHelper.BranchLocalDB()))
             {
-                var output = await connection.QuerySingleAsync<ItemSectionEnitiyModel>(@"select sec.* from sys_section sec inner join  sys_item si on
+                var output = await connection.QueryFirstOrDefaultAsync<ItemSectionEnitiyModel>(@"select sec.* from sys_section sec inner join  sys_item si on
                                                 si.section = sec.section and si.itemclass = sec.itemclass
                                                 inner join sys_item_units siu on siu.itemean = si.itemean
                                                 where siu.barcode = @barcode", new { barcode });
