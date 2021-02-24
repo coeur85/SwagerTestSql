@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using PdaHub.Repositories;
 using PdaHub.Helpers;
+using PdaHub.Services;
 
 namespace SwaggerTest
 {
@@ -44,6 +45,8 @@ namespace SwaggerTest
             services.AddSingleton<iHelper,Helper>();
             services.AddSingleton<IStockDataRepository,StockDataRepository>();
             services.AddSingleton<IBasicDataRepository,BasicDataRepository>();
+            services.AddSingleton<IItemsRepository,ItemsRepository>();
+            services.AddSingleton<IItemsServices,ItemsServices>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,17 +58,12 @@ namespace SwaggerTest
             //}
 
             app.UseHttpsRedirection();
-
             app.UseRouting();
-
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
-          
-
            app.UseSwagger();
            app.UseSwaggerUI(c =>
             {

@@ -13,7 +13,7 @@ namespace PdaHub.Models
         public string EnglishName { get; set; }
         public DateTime PrintDate { get; set; } = DateTime.Now;
         public string Notes { get; set; }
-        public bool Is9010 { get; set; } = false;
+        public bool IsSpecial { get; set; } = false;
         public decimal Price { get; set; }
 
     }
@@ -67,4 +67,10 @@ namespace PdaHub.Models
 		public short? usage { get; set; }
 		public DateTime? transdate { get; set; }
 	}
+
+	public class ItemSpecialEnitiyModel
+	{
+        public string Barcode { get; set; }
+        public string Notes { get; set; }
+    }
 }
