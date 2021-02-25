@@ -34,6 +34,8 @@ namespace SwaggerTest
 
             });
 
+            
+
             services.AddSingleton<iHelper, Helper>();
             services.AddSingleton<IStockRepository, StockRepository>();
             services.AddSingleton<IStockService, StockService>();

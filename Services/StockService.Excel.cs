@@ -13,6 +13,7 @@ namespace PdaHub.Services
 
         private async Task<byte[]> SaveToExcelByteArrayAsync(StockInOutDetailModel model)
         {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using var p = new ExcelPackage();
             var ws = p.Workbook.Worksheets.Add("MySheet");
             ws.View.RightToLeft = true;
