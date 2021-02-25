@@ -5600,11 +5600,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\PdaHub.csproj",
+      "projectUniqueName": "C:\\Users\\ahmed.magdi\\source\\repos\\bGomlaPda\\PdaHub.csproj",
       "projectName": "PdaHub",
-      "projectPath": "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\PdaHub.csproj",
+      "projectPath": "C:\\Users\\ahmed.magdi\\source\\repos\\bGomlaPda\\PdaHub.csproj",
       "packagesPath": "C:\\Users\\ahmed.magdi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ahmed.magdi\\source\\repos\\SwagerTestSql\\obj\\",
+      "outputPath": "C:\\Users\\ahmed.magdi\\source\\repos\\bGomlaPda\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\ahmed.magdi\\AppData\\Roaming\\NuGet\\NuGet.Config",
