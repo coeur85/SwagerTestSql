@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PdaHub.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace PdaHub.Helpers
@@ -15,7 +12,7 @@ namespace PdaHub.Helpers
         {
             try
             {
-                 return await model();
+                return await model();
             }
             catch (PdaHubExceptionsModel ex)
             {

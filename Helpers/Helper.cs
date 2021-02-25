@@ -1,8 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace PdaHub.Helpers
 {
@@ -16,12 +12,12 @@ namespace PdaHub.Helpers
             _configuration = configuration;
         }
 
-        public  string PdaHubConnection() => 
+        public string PdaHubConnection() =>
             _configuration.GetConnectionString("PdaHub");
         public string BranchLocalDB() =>
             _configuration.GetConnectionString("LocalRetail");
         public string ExcelSaveRoot() =>
           _configuration.GetSection("ExcelSaveRoot").Value;
-        
+
     }
 }

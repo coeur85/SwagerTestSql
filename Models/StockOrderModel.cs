@@ -3,7 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace PdaHub.Models {
+namespace PdaHub.Models
+{
     public class StockReviewModel
     {
         public int BranchCode { get; set; }
@@ -29,7 +30,7 @@ namespace PdaHub.Models {
 
         public int DocType { get; set; }
     }
-    public class StockOrderItemsModel 
+    public class StockOrderItemsModel
     {
         public int Itemean { get; set; }
         public string Barcode { get; set; }

@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace PdaHub.Controllers
@@ -24,10 +21,11 @@ namespace PdaHub.Controllers
 
         [HttpGet("{id}")]
         public Task<ResponseModel> Get(string id)
-            => TryCatch(async ()=> {
+            => TryCatch(async () =>
+            {
                 var output = await _itemsServices.GetPosItem(id);
                 return output;
             });
-        
+
     }
 }

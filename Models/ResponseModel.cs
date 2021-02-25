@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace PdaHub.Models
 {
@@ -23,12 +20,12 @@ namespace PdaHub.Models
             Messages.Add(new MessageDataModel { MessageType = type, MessageBody = msg });
         }
         public object Data { get; set; }
-       
+
 
     }
 
 
-   
+
 
     public class ErrorResponseModel : ResponseModel
     {
@@ -55,16 +52,16 @@ namespace PdaHub.Models
             base.Messages = Messages;
         }
 
-    } 
-    
+    }
 
 
-   public class MessageDataModel
+
+    public class MessageDataModel
     {
         public MessageType MessageType { get; set; }
         public string MessageBody { get; set; }
     }
-   public enum MessageType
+    public enum MessageType
     {
         Success,
         Warining,

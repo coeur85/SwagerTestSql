@@ -7,6 +7,6 @@ namespace PdaHub.Repositories
     {
         Task<StockInOutDetailModel> GetInOutOrderDetailAsync(StockReviewModel model);
         Task<StockDetailModel> GetOrderDetailAsync(StockReviewModel model, string connectionString);
-       
+
     }
 }

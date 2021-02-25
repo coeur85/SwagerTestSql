@@ -1,16 +1,10 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Dapper;
+using Microsoft.Data.SqlClient;
 using PdaHub.Helpers;
 using PdaHub.Models;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
-using System.IO;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
-using System.Drawing;
 
 
 namespace PdaHub.Repositories
@@ -81,7 +75,7 @@ namespace PdaHub.Repositories
             }
             return stockDetailModel;
         }
-       
+
 
 
     }

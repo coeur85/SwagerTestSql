@@ -1,10 +1,8 @@
 ﻿using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using PdaHub.Models;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,7 +10,7 @@ namespace PdaHub.Services
 {
     public partial class StockService
     {
-        
+
         private async Task<byte[]> SaveToExcelByteArrayAsync(StockInOutDetailModel model)
         {
             using var p = new ExcelPackage();
@@ -209,7 +207,7 @@ namespace PdaHub.Services
 
         }
 
-       
+
 
     }
 }

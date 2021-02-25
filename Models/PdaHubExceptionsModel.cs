@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace PdaHub.Models
 {
     public class PdaHubExceptionsModel : Exception
     {
-        public PdaHubExceptionsModel(string error):base(error)
+        public PdaHubExceptionsModel(string error) : base(error)
         {
 
         }
@@ -35,6 +33,6 @@ namespace PdaHub.Models
                 Messages.Add(new MessageDataModel { MessageBody = msg, MessageType = MessageType.Error });
             }
         }
-       
+
     }
 }

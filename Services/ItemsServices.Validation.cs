@@ -1,12 +1,9 @@
 ﻿using PdaHub.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace PdaHub.Services
 {
-    public partial class  ItemsServices
+    public partial class ItemsServices
     {
         private void ValidatePosItem(PosItemEnitityModel model)
         {
@@ -16,7 +13,7 @@ namespace PdaHub.Services
         }
         private void CheckPromos(PosItemEnitityModel model)
         {
-            if(model.date_from.HasValue && model.date_to.HasValue)
+            if (model.date_from.HasValue && model.date_to.HasValue)
             {
                 if (DateTime.Now > model.date_from && DateTime.Now < model.date_to)
                 {

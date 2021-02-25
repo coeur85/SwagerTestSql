@@ -1,12 +1,10 @@
 ﻿using PdaHub.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace PdaHub.Services
 {
-    public partial class  StockService
+    public partial class StockService
     {
         private delegate Task<SucessResponseModel> SendUpdateDelegate();
         private async Task<SucessResponseModel> TryCatch(SendUpdateDelegate model)
