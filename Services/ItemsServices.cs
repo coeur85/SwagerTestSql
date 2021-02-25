@@ -32,7 +32,8 @@ namespace PdaHub.Services
                 if (specialItemModel is not null)
                 { item.IsSpecial = true; item.Notes = specialItemModel.Notes; }
 
-                SucessResponseModel output = new(item, $"Last price update on {dbModel.last_modified_time}", MessageType.Information);
+                SucessResponseModel output = new(item, @$"Last price update on {dbModel.last_modified_time.ToShortDateString()}" +
+                    $"-{dbModel.last_modified_time.ToShortTimeString()}", MessageType.Information);
                 return output;
             });
 
