@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NSwag.Annotations;
 using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Services;

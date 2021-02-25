@@ -19,7 +19,7 @@ namespace PdaHub.Services
                 if (DateTime.Now > model.date_from && DateTime.Now < model.date_to)
                 {
                     throw new ItemsExceptions(
-                        new string[]{ @"the item has an active on it and can not be printed by this app tight now",
+                        new string[]{ @"the item has an active promotion and can not be printed by this app right now",
                             $"barcode# {model.barcode}",
                             $"item name {model.a_name}",
                             $"promo number# {model.discountno}",
