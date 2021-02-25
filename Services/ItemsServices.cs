@@ -24,9 +24,9 @@ namespace PdaHub.Services
                 {
                     ArabicName = dbModel.a_name,
                     Barcode = dbModel.barcode.Trim(),
-                    EnglishName = dbModel.l_name,
+                    EnglishName = HasArabicLetters(dbModel.l_name)? string.Empty: dbModel.l_name ,
                     Price = dbModel.sell_price.Value,
-                    PrintDate = DateTime.Now,
+                    PrintDate = DateTime.Today,
                     CategoryName = catModel.a_name,
                 };
                 if (specialItemModel is not null)

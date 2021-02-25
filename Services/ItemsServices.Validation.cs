@@ -1,5 +1,6 @@
 ﻿using PdaHub.Models;
 using System;
+using System.Text.RegularExpressions;
 
 namespace PdaHub.Services
 {
@@ -36,6 +37,11 @@ namespace PdaHub.Services
         {
             if (model is null)
                 throw new ItemsExceptions("No items where found, please check your barcode");
+        }
+        private bool HasArabicLetters(string text)
+        {
+            Regex regex = new Regex("[\u0600-\u06ff]|[\u0750-\u077f]|[\ufb50-\ufc3f]|[\ufe70-\ufefc]");
+            return regex.IsMatch(text);
         }
     }
 }
