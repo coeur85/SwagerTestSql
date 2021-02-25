@@ -4,6 +4,7 @@ using PdaHub.Repositories;
 using SimpleImpersonation;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,29 +25,23 @@ namespace PdaHub.Services
             TryCatch(async () =>
             {
                 var data = await _stockReository.GetInOutOrderDetailAsync(model);
-              
-
-                var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
-               
-
-                Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
-                {
-                    SaveToExcel(data);
-                });
+                var fileBytes = await SaveToExcelByteArrayAsync(data);
+                var filename = GenrateExcelFullFileName(data);
+                RunAsAdminUser(async () => await SaveBytesToFileAsync(filename, fileBytes));
+                
                 return new SucessResponseModel { Data = data };
             });
-        private void RunAsAdminUser(StockInOutDetailModel model)
+        private void RunAsAdminUser(Action model)
         {
            var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
-          // var credentials = new UserCredentials(@"bGomla\am.dadmin", @"Az0103061!");
-
             Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
             {
-                // model();
-                SaveToExcel(model);
+                 model(); 
             });
 
         }
+        private Task SaveBytesToFileAsync(string name, byte[] bytes) =>
+            File.WriteAllBytesAsync(name, bytes);
 
     }
 }

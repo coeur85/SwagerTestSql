@@ -13,7 +13,7 @@ namespace PdaHub.Services
     public partial class StockService
     {
         private delegate void VoidMethod();
-        private void SaveToExcel(StockInOutDetailModel model)
+        private async Task<byte[]> SaveToExcelByteArrayAsync(StockInOutDetailModel model)
         {
             using var p = new ExcelPackage();
             //A workbook must have at least on cell, so lets add one... 
@@ -171,13 +171,26 @@ namespace PdaHub.Services
 
             ws.Protection.IsProtected = true;
             ws.Protection.AllowAutoFilter = true;
+            ws.Protection.AllowSort = true;
 
-            ws.Protection.SetPassword("ahmed");
+            ws.Protection.SetPassword("3895784352085846561!$");
 
             ws.Cells[ws.Dimension.Address].AutoFitColumns();
 
+            //   string filename = GenrateFileName(model);
 
 
+
+
+            //  p.SaveAs(new FileInfo(filename));
+
+            return await p.GetAsByteArrayAsync();
+
+
+        }
+
+        private string GenrateExcelFullFileName(StockInOutDetailModel model)
+        {
             string filename = _helper.ExcelSaveRoot() +
                 model.StockOrderIn.StockOrder.Branch.ToString() + "." +
                 model.StockOrderIn.StockOrder.DocType.ToString() + "." +
@@ -191,17 +204,10 @@ namespace PdaHub.Services
               model.StockOrderOut.StockOrder.Orderno.ToString());
 
             }
-
-
-
             filename += ".xlsx";
-
-
-            p.SaveAs(new FileInfo(filename));
-
-
-
+            return filename;
         }
+
         private void HeaderFormate(ExcelRange range, Color BackGroudcolor)
         {
 
@@ -211,6 +217,8 @@ namespace PdaHub.Services
             range.Style.Font.Color.SetColor(Color.White);
 
         }
+
+       
 
     }
 }
