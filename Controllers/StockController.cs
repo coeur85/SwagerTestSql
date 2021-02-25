@@ -19,30 +19,19 @@ namespace PdaHub.Controllers
         public class StockController : PdaHubBaseContraoller
         {
         private readonly IStockService _stockService;
-        private readonly IStockRepository _stockData;
+       
 
-        public StockController(IStockService stockService, IStockRepository stockRepository)
-            {
+        public StockController(IStockService stockService)=>
             _stockService = stockService;
-            _stockData = stockRepository;
-        }
+           
+        
     
         [HttpGet]
         public string Get()
           {
               return "Stock Controller Get method";
           }
-        //[HttpPost]
-        //public async Task<StockInOutDetailModel> sendUpdate(StockReviewModel model)
-        //{
-        //    var data = await _stockData.GetInOutOrderDetailAsync(model);
-        //    var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
-        //    Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
-        //    {
-        //        _stockData.SaveToExcel(data);
-        //    });
-        //    return data;
-        //}
+       
         [HttpPost]
         public Task<ResponseModel> SendUpdate(StockReviewModel model)
             => TryCatch(async () =>

@@ -12,49 +12,34 @@ namespace PdaHub.Services
 {
     public partial class StockService
     {
-        private delegate void VoidMethod();
+        
         private async Task<byte[]> SaveToExcelByteArrayAsync(StockInOutDetailModel model)
         {
             using var p = new ExcelPackage();
-            //A workbook must have at least on cell, so lets add one... 
             var ws = p.Workbook.Worksheets.Add("MySheet");
-
             ws.View.RightToLeft = true;
 
-            // create sheet header
+            CreateStaticHeader(model, ws);
+            CreateDynamicRows(model, ws);
+            AddSheetSettings(ws);
 
-            ws.Cells[1, 1].Value = "رقم اذن الاستلام"; ws.Cells[1, 2].Value = model.StockOrderIn.StockOrder.Orderno;
-            ws.Cells[2, 1].Value = "تاريخ الاستلام"; ws.Cells[2, 2].Value = model.StockOrderIn.StockOrder.Orderdate.ToString("yyyy-MM-dd");
-            ws.Cells[3, 1].Value = "فرع الاستلام"; ws.Cells[3, 2].Value = model.StockOrderIn.StockOrder.BranchName;
-
-
-            ws.Cells[1, 4].Value = "رقم اذن الصرف"; ws.Cells[1, 5].Value = model.StockOrderIn.StockOrder.Invoiceno?.ToString();
-            ws.Cells[2, 4].Value = "تاريخ الصرف"; ws.Cells[2, 5].Value = model.StockOrderIn.StockOrder.Invoicedate?.ToString("yyyy-MM-dd");
-            ws.Cells[3, 4].Value = "فرع الصرف"; ws.Cells[3, 5].Value = model.StockOrderIn.StockOrder.SiteName;
-
-            HeaderFormate(ws.Cells[1, 1, 3, 1], Color.DarkCyan);
-            HeaderFormate(ws.Cells[1, 4, 3, 4], Color.DarkOrange);
-
-            // end of sheet header
+            return await p.GetAsByteArrayAsync();
 
 
-            // sheet items
+        }
 
-            ws.Cells[5, 1].Value = "#";
-            ws.Cells[5, 2].Value = "كود الصنف";
-            ws.Cells[5, 3].Value = "باركود";
-            ws.Cells[5, 4].Value = "اسم الصنف";
-            ws.Cells[5, 5].Value = "كود الوحده";
-            ws.Cells[5, 6].Value = "الوحده";
-            HeaderFormate(ws.Cells[5, 1, 5, 6], Color.Black);
-            ws.Cells[5, 1, 5, 6].AutoFilter = true;
+        private static void AddSheetSettings(ExcelWorksheet ws)
+        {
+            ws.View.FreezePanes(6, 5);
+            ws.Protection.IsProtected = true;
+            ws.Protection.AllowAutoFilter = true;
+            ws.Protection.AllowSort = true;
+            ws.Protection.SetPassword("$bgomlait!");
 
-
-            ws.Cells[5, 7].Value = "كميه فعليه مستلمه";
-            ws.Cells[5, 8].Value = "كميه بونص مستلمة";
-            ws.Cells[5, 9].Value = "اجمالي الاستلام";
-            HeaderFormate(ws.Cells[5, 7, 5, 9], Color.DarkCyan);
-            ws.Cells[5, 7, 5, 9].AutoFilter = true;
+            ws.Cells[ws.Dimension.Address].AutoFitColumns();
+        }
+        private void CreateDynamicRows(StockInOutDetailModel model, ExcelWorksheet ws)
+        {
             int i = 6; int index = 1;
 
             if (model.StockOrderOut == null)
@@ -160,35 +145,42 @@ namespace PdaHub.Services
 
 
             }
-
-
-
-
-
-            ws.View.FreezePanes(6, 5);
-
-
-
-            ws.Protection.IsProtected = true;
-            ws.Protection.AllowAutoFilter = true;
-            ws.Protection.AllowSort = true;
-
-            ws.Protection.SetPassword("3895784352085846561!$");
-
-            ws.Cells[ws.Dimension.Address].AutoFitColumns();
-
-            //   string filename = GenrateFileName(model);
-
-
-
-
-            //  p.SaveAs(new FileInfo(filename));
-
-            return await p.GetAsByteArrayAsync();
-
-
         }
+        private void CreateStaticHeader(StockInOutDetailModel model, ExcelWorksheet ws)
+        {
+            ws.Cells[1, 1].Value = "رقم اذن الاستلام"; ws.Cells[1, 2].Value = model.StockOrderIn.StockOrder.Orderno;
+            ws.Cells[2, 1].Value = "تاريخ الاستلام"; ws.Cells[2, 2].Value = model.StockOrderIn.StockOrder.Orderdate.ToString("yyyy-MM-dd");
+            ws.Cells[3, 1].Value = "فرع الاستلام"; ws.Cells[3, 2].Value = model.StockOrderIn.StockOrder.BranchName;
 
+
+            ws.Cells[1, 4].Value = "رقم اذن الصرف"; ws.Cells[1, 5].Value = model.StockOrderIn.StockOrder.Invoiceno?.ToString();
+            ws.Cells[2, 4].Value = "تاريخ الصرف"; ws.Cells[2, 5].Value = model.StockOrderIn.StockOrder.Invoicedate?.ToString("yyyy-MM-dd");
+            ws.Cells[3, 4].Value = "فرع الصرف"; ws.Cells[3, 5].Value = model.StockOrderIn.StockOrder.SiteName;
+
+            HeaderFormate(ws.Cells[1, 1, 3, 1], Color.DarkCyan);
+            HeaderFormate(ws.Cells[1, 4, 3, 4], Color.DarkOrange);
+
+            // end of sheet header
+
+
+            // sheet items
+
+            ws.Cells[5, 1].Value = "#";
+            ws.Cells[5, 2].Value = "كود الصنف";
+            ws.Cells[5, 3].Value = "باركود";
+            ws.Cells[5, 4].Value = "اسم الصنف";
+            ws.Cells[5, 5].Value = "كود الوحده";
+            ws.Cells[5, 6].Value = "الوحده";
+            HeaderFormate(ws.Cells[5, 1, 5, 6], Color.Black);
+            ws.Cells[5, 1, 5, 6].AutoFilter = true;
+
+
+            ws.Cells[5, 7].Value = "كميه فعليه مستلمه";
+            ws.Cells[5, 8].Value = "كميه بونص مستلمة";
+            ws.Cells[5, 9].Value = "اجمالي الاستلام";
+            HeaderFormate(ws.Cells[5, 7, 5, 9], Color.DarkCyan);
+            ws.Cells[5, 7, 5, 9].AutoFilter = true;
+        }
         private string GenrateExcelFullFileName(StockInOutDetailModel model)
         {
             string filename = _helper.ExcelSaveRoot() +
@@ -207,7 +199,6 @@ namespace PdaHub.Services
             filename += ".xlsx";
             return filename;
         }
-
         private void HeaderFormate(ExcelRange range, Color BackGroudcolor)
         {
 
