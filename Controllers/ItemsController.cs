@@ -20,11 +20,11 @@ namespace PdaHub.Controllers
             _itemsServices = itemsServices;
         }
 
-        [HttpGet("{id}")]
-        public Task<ResponseModel> Get(string id)
+        [HttpGet("{barcode}")]
+        public Task<ResponseModel> Get(string barcode)
             => TryCatch(async () =>
             {
-                var output = await _itemsServices.GetPosItem(id);
+                var output = await _itemsServices.GetPosItem(barcode);
                 return output;
             });
 
