@@ -6,8 +6,8 @@ namespace PdaHub.Services
 {
     public partial class StockService
     {
-        private delegate Task<SucessResponseModel> SendUpdateDelegate();
-        private async Task<SucessResponseModel> TryCatch(SendUpdateDelegate model)
+        private delegate Task<SucessResponseModel<StockInOutDetailModel>> SendUpdateDelegate();
+        private async Task<SucessResponseModel<StockInOutDetailModel>> TryCatch(SendUpdateDelegate model)
         {
             try
             {

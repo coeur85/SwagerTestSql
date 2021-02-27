@@ -7,19 +7,19 @@ namespace PdaHub.Models
         public bool Succsess { get; set; }
         public List<MessageDataModel> Messages { get; set; } = new();
     }
-    public class SucessResponseModel : ResponseModel
+    public class SucessResponseModel<T> : ResponseModel
     {
         public SucessResponseModel()
         {
             Succsess = true;
         }
-        public SucessResponseModel(object data, string msg, MessageType type)
+        public SucessResponseModel(T data, string msg, MessageType type)
         {
             Succsess = true;
             Data = data;
             Messages.Add(new MessageDataModel { MessageType = type, MessageBody = msg });
         }
-        public object Data { get; set; }
+        public T Data { get; set; }
 
 
     }
@@ -55,14 +55,21 @@ namespace PdaHub.Models
     }
 
 
-
+    /// <summary>Everyone needs a name</summary>
     public class MessageDataModel
     {
+        /// <summary> test </summary>
+        /// 0   Success,
+        /// 1   Warining,
+        /// 2   Error,
+        /// 3   Information
+
         public MessageType MessageType { get; set; }
         public string MessageBody { get; set; }
     }
     public enum MessageType
     {
+       
         Success,
         Warining,
         Error,

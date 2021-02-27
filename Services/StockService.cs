@@ -19,7 +19,7 @@ namespace PdaHub.Services
         }
 
 
-        public Task<SucessResponseModel> SendUpdate(StockReviewModel model) =>
+        public Task<SucessResponseModel<StockInOutDetailModel>> SendUpdate(StockReviewModel model) =>
             TryCatch(async () =>
             {
                 var data = await _stockReository.GetInOutOrderDetailAsync(model);
@@ -27,7 +27,7 @@ namespace PdaHub.Services
                 var filename = GenrateExcelFullFileName(data);
                 RunAsAdminUser(async () => await SaveBytesToFileAsync(filename, fileBytes));
 
-                return new SucessResponseModel { Data = data };
+                return new SucessResponseModel<StockInOutDetailModel>() { Data = data };
             });
         private void RunAsAdminUser(Action model)
         {

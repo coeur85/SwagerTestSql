@@ -12,7 +12,7 @@ namespace PdaHub.Services
         {
             _itemsRepository = itemsRepository;
         }
-        public Task<SucessResponseModel> GetPosItem(string barcode)
+        public Task<SucessResponseModel<ItemDetailsResponseModel>> GetPosItem(string barcode)
             => TryCatch(async () =>
             {
                 barcode = barcode.Trim();
@@ -32,7 +32,7 @@ namespace PdaHub.Services
                 if (specialItemModel is not null)
                 { item.IsSpecial = true; item.Notes = specialItemModel.Notes; }
 
-                SucessResponseModel output = new(item, @$"Last price update on {dbModel.last_modified_time.ToShortDateString()}" +
+                SucessResponseModel<ItemDetailsResponseModel> output = new(item, @$"Last price update on {dbModel.last_modified_time.ToShortDateString()}" +
                     $"-{dbModel.last_modified_time.ToShortTimeString()}", MessageType.Information);
                 return output;
             });

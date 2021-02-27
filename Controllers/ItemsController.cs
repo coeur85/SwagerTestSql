@@ -16,17 +16,17 @@ namespace PdaHub.Controllers
         private readonly IItemsServices _itemsServices;
 
         public ItemsController(IItemsServices itemsServices)
-        {
-            _itemsServices = itemsServices;
-        }
+            => _itemsServices = itemsServices;
+        
 
         [HttpGet("{barcode}")]
-        public Task<ResponseModel> Get(string barcode)
-            => TryCatch(async () =>
+        public Task<ActionResult<SucessResponseModel<ItemDetailsResponseModel>>> Get(string barcode)
+            => TryCatch<ItemDetailsResponseModel>(async () =>
             {
                 var output = await _itemsServices.GetPosItem(barcode);
-                return output;
+                return Ok(output);
             });
 
+        
     }
 }

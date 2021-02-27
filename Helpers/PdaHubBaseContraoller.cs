@@ -6,9 +6,9 @@ namespace PdaHub.Helpers
 {
     public class PdaHubBaseContraoller : ControllerBase
     {
-        protected delegate Task<ResponseModel> RetrunActionResultFunc();
+        protected delegate Task<ActionResult<SucessResponseModel<T>>> RetrunActionResultFunc<T>();
 
-        protected async Task<ResponseModel> TryCatch(RetrunActionResultFunc model)
+        protected async Task<ActionResult<SucessResponseModel<T>>> TryCatch<T>(RetrunActionResultFunc<T> model)
         {
             try
             {
@@ -17,7 +17,7 @@ namespace PdaHub.Helpers
             catch (PdaHubExceptionsModel ex)
             {
 
-                return new ErrorResponseModel(ex.Messages);
+                return NotFound(new ErrorResponseModel(ex.Messages));
             }
         }
     }

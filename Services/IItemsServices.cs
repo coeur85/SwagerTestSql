@@ -5,6 +5,6 @@ namespace PdaHub.Services
 {
     public interface IItemsServices
     {
-        Task<SucessResponseModel> GetPosItem(string barcode);
+        Task<SucessResponseModel<ItemDetailsResponseModel>> GetPosItem(string barcode);
     }
 }

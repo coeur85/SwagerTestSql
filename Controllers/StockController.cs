@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace PdaHub.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    [AllowAnonymous]
+   // [ApiController]
+   // [Route("[controller]")]
+  //  [AllowAnonymous]
     public class StockController : PdaHubBaseContraoller
     {
         private readonly IStockService _stockService;
@@ -27,11 +27,11 @@ namespace PdaHub.Controllers
         }
 
         [HttpPost]
-        public Task<ResponseModel> SendUpdate(StockReviewModel model)
-            => TryCatch(async () =>
+        public Task<ActionResult<SucessResponseModel<StockInOutDetailModel>>> SendUpdate(StockReviewModel model)
+            => TryCatch<StockInOutDetailModel>(async () =>
             {
                 var output = await _stockService.SendUpdate(model);
-                return output;
+                return Ok(output);
             });
 
 

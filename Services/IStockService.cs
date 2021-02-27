@@ -5,6 +5,6 @@ namespace PdaHub.Services
 {
     public interface IStockService
     {
-        Task<SucessResponseModel> SendUpdate(StockReviewModel model);
+        Task<SucessResponseModel<StockInOutDetailModel>> SendUpdate(StockReviewModel model);
     }
 }
