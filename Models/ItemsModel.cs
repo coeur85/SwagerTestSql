@@ -48,7 +48,7 @@ namespace PdaHub.Models
         public decimal? cost_price { get; set; }
         public decimal? usage { get; set; }
         public short? itemtype { get; set; }
-        public string? itemean { get; set; }
+        public string itemean { get; set; }
         public short? category { get; set; }
         public DateTime last_modified_time { get; set; }
 
