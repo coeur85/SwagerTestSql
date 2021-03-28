@@ -2,7 +2,7 @@
 
 namespace PdaHub.Models
 {
-    public class ItemDetailsResponseModel
+    public record ItemDetailsResponseModel
     {
         public string Barcode { get; set; }
         public string CategoryName { get; set; }
@@ -14,7 +14,7 @@ namespace PdaHub.Models
         public decimal Price { get; set; }
 
     }
-    public class PosItemEnitityModel
+    public record PosItemEnitityModel
     {
         public string barcode { get; set; }
         public string a_name { get; set; }
@@ -54,7 +54,7 @@ namespace PdaHub.Models
 
     }
 
-    public class ItemSectionEnitiyModel
+    public record ItemSectionEnitiyModel
     {
 
         public short? itemclass { get; set; }
@@ -65,9 +65,13 @@ namespace PdaHub.Models
         public DateTime? transdate { get; set; }
     }
 
-    public class ItemSpecialEnitiyModel
+    public record ItemSpecialEnitiyModel
     {
         public string Barcode { get; set; }
         public string Notes { get; set; }
     }
+
 }
+
+
+

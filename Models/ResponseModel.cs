@@ -55,7 +55,7 @@ namespace PdaHub.Models
     }
 
 
-    /// <summary>Everyone needs a name</summary>
+  
     public class MessageDataModel
     {
         /// <summary> test </summary>

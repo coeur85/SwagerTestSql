@@ -20,11 +20,12 @@ namespace PdaHub.Services
                 var catModel = await _itemsRepository.GetItemSection(barcode);
                 var specialItemModel = await _itemsRepository.itemSpecial(barcode);
                 ValidatePosItem(dbModel);
+                var modelName = ItemName(dbModel);
                 ItemDetailsResponseModel item = new ItemDetailsResponseModel
                 {
-                    ArabicName = dbModel.a_name,
+                    ArabicName = modelName.ArabicName,
                     Barcode = dbModel.barcode.Trim(),
-                    EnglishName = HasArabicLetters(dbModel.l_name)? string.Empty: dbModel.l_name ,
+                    EnglishName = modelName.EnglsihName ,
                     Price = dbModel.sell_price.Value,
                     PrintDate = DateTime.Today,
                     CategoryName = catModel.a_name,
