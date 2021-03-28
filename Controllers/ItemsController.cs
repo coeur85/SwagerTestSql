@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
@@ -18,11 +17,11 @@ namespace PdaHub.Controllers
 
         public ItemsController(IItemsServices itemsServices)
             => _itemsServices = itemsServices;
-        
+
 
         [HttpGet("{barcode}")]
-        [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>),(int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponseModel),(int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.NotFound)]
         public Task<ActionResult<SucessResponseModel<ItemDetailsResponseModel>>> Get(string barcode)
             => TryCatch<ItemDetailsResponseModel>(async () =>
             {
@@ -30,6 +29,6 @@ namespace PdaHub.Controllers
                 return Ok(output);
             });
 
-        
+
     }
 }

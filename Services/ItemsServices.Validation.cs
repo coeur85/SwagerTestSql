@@ -51,7 +51,7 @@ namespace PdaHub.Services
         private NameingModel ItemName(PosItemEnitityModel dbModel)
         {
             NameingModel output = new() { ArabicName = dbModel.a_name, EnglsihName = dbModel.l_name };
-            
+
             if (HasArabicLetters(dbModel.l_name))
             {
                 output.EnglsihName = string.Empty;
@@ -60,14 +60,15 @@ namespace PdaHub.Services
 
             if (string.IsNullOrEmpty(output.EnglsihName))
             {
-                if(output.ArabicName.Length > 40)
+                if (output.ArabicName.Length >= 45)
                 {
                     var words = SplitLines(output.ArabicName);
                     output.ArabicName = words[0];
                     output.EnglsihName = words[1];
-                } 
+                }
             }
 
+           // output.ArabicName = Center(output.ArabicName);
 
 
             return output;
@@ -83,17 +84,40 @@ namespace PdaHub.Services
             int wc = words.Length / 2;
             string[] output = new string[2];
 
-            for (int i = 0; i < wc+1; i++)
+            for (int i = 0; i < wc ; i++)
             {
                 output[0] += (words[i] + " ");
             }
 
-            for (int i = wc+1  ; i < words.Length ; i++)
+            for (int i = wc ; i < words.Length; i++)
             {
                 output[1] += (words[i] + " ");
             }
 
+
+
+
             return output;
+        }
+
+
+        private string EmptySpaces(int length)
+        {
+            string output = string.Empty;
+            for (int i = 0; i < length; i++)
+            {
+                output += " ";
+            }
+            return output;
+        }
+
+        private string Center(string word)
+        {
+
+            var lin1 = 50 - word.Length;
+            int beforAfter = lin1 / 2;
+            word = (EmptySpaces(beforAfter) + word + EmptySpaces(beforAfter));
+            return word;
         }
 
     }

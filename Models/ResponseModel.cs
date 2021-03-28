@@ -55,7 +55,7 @@ namespace PdaHub.Models
     }
 
 
-  
+
     public class MessageDataModel
     {
         /// <summary> test </summary>
@@ -69,7 +69,7 @@ namespace PdaHub.Models
     }
     public enum MessageType
     {
-       
+
         Success,
         Warining,
         Error,

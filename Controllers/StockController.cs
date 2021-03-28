@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
@@ -7,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace PdaHub.Controllers
 {
-   // [ApiController]
-   // [Route("[controller]")]
-  //  [AllowAnonymous]
+    // [ApiController]
+    // [Route("[controller]")]
+    //  [AllowAnonymous]
     public class StockController : PdaHubBaseContraoller
     {
         private readonly IStockService _stockService;

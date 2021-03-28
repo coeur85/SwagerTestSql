@@ -25,7 +25,7 @@ namespace PdaHub.Services
                 {
                     ArabicName = modelName.ArabicName,
                     Barcode = dbModel.barcode.Trim(),
-                    EnglishName = modelName.EnglsihName ,
+                    EnglishName = modelName.EnglsihName,
                     Price = dbModel.sell_price.Value,
                     PrintDate = DateTime.Today,
                     CategoryName = catModel.a_name,

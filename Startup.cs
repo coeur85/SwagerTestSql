@@ -29,13 +29,13 @@ namespace SwaggerTest
                     Version = "v1",
                     Title = "bGomla API",
                     Description = "Stock , BasicData, Items"
-                    
+
                 });
                 c.SchemaFilter<NSwageSchemaFilter>();
 
             });
 
-            
+
 
             services.AddSingleton<iHelper, Helper>();
             services.AddSingleton<IStockRepository, StockRepository>();
