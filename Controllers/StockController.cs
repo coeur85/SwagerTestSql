@@ -1,14 +1,16 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Services;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace PdaHub.Controllers
 {
-    // [ApiController]
-    // [Route("[controller]")]
-    //  [AllowAnonymous]
+    [ApiController]
+    [Route("[controller]")]
+    [AllowAnonymous]
     public class StockController : PdaHubBaseContraoller
     {
         private readonly IStockService _stockService;
@@ -26,6 +28,8 @@ namespace PdaHub.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.BadRequest)]
         public Task<ActionResult<SucessResponseModel<StockInOutDetailModel>>> SendUpdate(StockReviewModel model)
             => TryCatch<StockInOutDetailModel>(async () =>
             {

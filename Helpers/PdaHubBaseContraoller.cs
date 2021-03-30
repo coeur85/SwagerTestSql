@@ -17,7 +17,7 @@ namespace PdaHub.Helpers
             catch (PdaHubExceptionsModel ex)
             {
 
-                return NotFound(new ErrorResponseModel(ex.Messages));
+                return BadRequest(new ErrorResponseModel(ex.Messages));
             }
         }
     }

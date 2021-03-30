@@ -21,7 +21,7 @@ namespace PdaHub.Controllers
 
         [HttpGet("{barcode}")]
         [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.BadRequest)]
         public Task<ActionResult<SucessResponseModel<ItemDetailsResponseModel>>> Get(string barcode)
             => TryCatch<ItemDetailsResponseModel>(async () =>
             {
