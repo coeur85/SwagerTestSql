@@ -5,7 +5,7 @@ using PdaHub.Models;
 using System.Data;
 using System.Threading.Tasks;
 
-namespace PdaHub.Repositories
+namespace PdaHub.Repositories.Items
 {
     public class ItemsRepository : IItemsRepository
     {

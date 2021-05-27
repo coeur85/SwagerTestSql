@@ -4,7 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using PdaHub.Helpers;
-using PdaHub.Repositories;
+using PdaHub.Repositories.BasicData;
+using PdaHub.Repositories.Items;
+using PdaHub.Repositories.Stock;
 using PdaHub.Services;
 
 namespace SwaggerTest

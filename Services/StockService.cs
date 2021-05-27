@@ -1,6 +1,6 @@
 ﻿using PdaHub.Helpers;
 using PdaHub.Models;
-using PdaHub.Repositories;
+using PdaHub.Repositories.Stock;
 using SimpleImpersonation;
 using System;
 using System.IO;

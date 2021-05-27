@@ -1,7 +1,7 @@
 ﻿using PdaHub.Models;
 using System.Threading.Tasks;
 
-namespace PdaHub.Repositories
+namespace PdaHub.Repositories.Stock
 {
     public interface IStockRepository
     {

@@ -2,12 +2,13 @@
 using Microsoft.Data.SqlClient;
 using PdaHub.Helpers;
 using PdaHub.Models;
+using PdaHub.Repositories.BasicData;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
 
-namespace PdaHub.Repositories
+namespace PdaHub.Repositories.Stock
 {
     public class StockRepository : IStockRepository
     {

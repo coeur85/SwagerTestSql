@@ -5,7 +5,7 @@ using System;
 using System.Data;
 using System.Threading.Tasks;
 
-namespace PdaHub.Repositories
+namespace PdaHub.Repositories.BasicData
 {
     public class BasicDataRepository : IBasicDataRepository
     {
@@ -15,7 +15,7 @@ namespace PdaHub.Repositories
         {
             _helper = helper;
         }
-        public async Task<String> GetBarcodeItemNameAsync(string barcode)
+        public async Task<string> GetBarcodeItemNameAsync(string barcode)
         {
             using (IDbConnection connection = new SqlConnection(_helper.BranchLocalDB()))
             {
