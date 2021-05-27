@@ -1,18 +1,19 @@
 ﻿using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Repositories.Stock;
+using PdaHub.Services.Stock;
 using SimpleImpersonation;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace PdaHub.Services
+namespace PdaHub.Services.Stock
 {
     public partial class StockService : IStockService
     {
-        private readonly IStockRepository _stockReository;
+        private readonly IStockOrderRepository _stockReository;
         private readonly iHelper _helper;
-        public StockService(IStockRepository stockReository, iHelper helper)
+        public StockService(IStockOrderRepository stockReository, iHelper helper)
         {
             _stockReository = stockReository;
             _helper = helper;

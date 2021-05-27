@@ -1,9 +1,9 @@
 ﻿using PdaHub.Models;
-using PdaHub.Models.Extintions;
+using PdaHub.Models.Extinctions;
 using System;
 using System.Text.RegularExpressions;
 
-namespace PdaHub.Services
+namespace PdaHub.Services.Items
 {
     public partial class ItemsServices
     {
@@ -68,7 +68,7 @@ namespace PdaHub.Services
                 }
             }
 
-           // output.ArabicName = Center(output.ArabicName);
+            // output.ArabicName = Center(output.ArabicName);
 
 
             return output;
@@ -84,14 +84,14 @@ namespace PdaHub.Services
             int wc = words.Length / 2;
             string[] output = new string[2];
 
-            for (int i = 0; i < wc ; i++)
+            for (int i = 0; i < wc; i++)
             {
-                output[0] += (words[i] + " ");
+                output[0] += words[i] + " ";
             }
 
-            for (int i = wc ; i < words.Length; i++)
+            for (int i = wc; i < words.Length; i++)
             {
-                output[1] += (words[i] + " ");
+                output[1] += words[i] + " ";
             }
 
 
@@ -116,7 +116,7 @@ namespace PdaHub.Services
 
             var lin1 = 50 - word.Length;
             int beforAfter = lin1 / 2;
-            word = (EmptySpaces(beforAfter) + word + EmptySpaces(beforAfter));
+            word = EmptySpaces(beforAfter) + word + EmptySpaces(beforAfter);
             return word;
         }
 

@@ -1,9 +1,10 @@
 ﻿using PdaHub.Models;
 using PdaHub.Repositories.Items;
+using PdaHub.Services.Items;
 using System;
 using System.Threading.Tasks;
 
-namespace PdaHub.Services
+namespace PdaHub.Services.Items
 {
     public partial class ItemsServices : IItemsServices
     {

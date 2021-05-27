@@ -1,4 +1,4 @@
-﻿using Dapper;
+﻿ using Dapper;
 using Microsoft.Data.SqlClient;
 using PdaHub.Helpers;
 using PdaHub.Models;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PdaHub.Repositories.Stock
 {
-    public class StockRepository : IStockRepository
+    public class StockRepository : IStockOrderRepository
     {
         private readonly iHelper _helper;
         private readonly IBasicDataRepository _basicData;

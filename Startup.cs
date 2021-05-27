@@ -7,7 +7,8 @@ using PdaHub.Helpers;
 using PdaHub.Repositories.BasicData;
 using PdaHub.Repositories.Items;
 using PdaHub.Repositories.Stock;
-using PdaHub.Services;
+using PdaHub.Services.Items;
+using PdaHub.Services.Stock;
 
 namespace SwaggerTest
 {
@@ -40,7 +41,7 @@ namespace SwaggerTest
 
 
             services.AddSingleton<iHelper, Helper>();
-            services.AddSingleton<IStockRepository, StockRepository>();
+            services.AddSingleton<IStockOrderRepository, StockRepository>();
             services.AddSingleton<IStockService, StockService>();
             services.AddSingleton<IBasicDataRepository, BasicDataRepository>();
             services.AddSingleton<IItemsRepository, ItemsRepository>();

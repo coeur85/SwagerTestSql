@@ -1,7 +1,7 @@
 ﻿using PdaHub.Models;
 using System.Threading.Tasks;
 
-namespace PdaHub.Services
+namespace PdaHub.Services.Stock
 {
     public interface IStockService
     {

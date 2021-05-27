@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace PdaHub.Services
+namespace PdaHub.Services.Stock
 {
     public partial class StockService
     {

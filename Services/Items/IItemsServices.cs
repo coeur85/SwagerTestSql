@@ -1,7 +1,7 @@
 ﻿using PdaHub.Models;
 using System.Threading.Tasks;
 
-namespace PdaHub.Services
+namespace PdaHub.Services.Items
 {
     public interface IItemsServices
     {

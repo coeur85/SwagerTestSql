@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace PdaHub.Services
+namespace PdaHub.Services.Items
 {
     public partial class ItemsServices
     {

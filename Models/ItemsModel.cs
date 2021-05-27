@@ -53,7 +53,6 @@ namespace PdaHub.Models
         public DateTime last_modified_time { get; set; }
 
     }
-
     public record ItemSectionEnitiyModel
     {
 
@@ -64,7 +63,6 @@ namespace PdaHub.Models
         public short? usage { get; set; }
         public DateTime? transdate { get; set; }
     }
-
     public record ItemSpecialEnitiyModel
     {
         public string Barcode { get; set; }

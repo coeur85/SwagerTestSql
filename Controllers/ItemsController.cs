@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
-using PdaHub.Services;
+using PdaHub.Services.Items;
 using System.Net;
 using System.Threading.Tasks;
 
