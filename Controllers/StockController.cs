@@ -26,7 +26,6 @@ namespace PdaHub.Controllers
         {
             return "Stock Controller Get method";
         }
-
         [HttpPost]
         [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.BadRequest)]

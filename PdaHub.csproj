@@ -19,8 +19,4 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="6.0.7" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repositories\Stock\StockOrder\" />
-  </ItemGroup>
-
 </Project>
