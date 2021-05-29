@@ -3,6 +3,8 @@ using Microsoft.Data.SqlClient;
 using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Repositories.BasicData;
+using PdaHub.Repositories.Stock.Order;
+using PdaHub.Repositories.Stock.OrderItems;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,46 +15,25 @@ namespace PdaHub.Repositories.Stock
     public class StockRepository : IStockOrderRepository
     {
         private readonly iHelper _helper;
-        private readonly IBasicDataRepository _basicData;
-        public StockRepository(iHelper helper, IBasicDataRepository basicData)
+        private readonly IStockOrder _stockOrde;
+        private readonly IStockOrderItems _stockOrderItems;
+
+        public StockRepository(iHelper helper, IBasicDataRepository basicData, IStockOrder stockOrde, IStockOrderItems stockOrderItems)
         {
             _helper = helper;
             _basicData = basicData;
+            _stockOrde = stockOrde;
+            _stockOrderItems = stockOrderItems;
         }
 
 
         public async Task<StockDetailModel> GetOrderDetailAsync(StockReviewModel model, string connectionString)
         {
-            StockDetailModel stockDetailModel = new StockDetailModel();
-            using (IDbConnection connection = new SqlConnection(connectionString))
-            {
+            StockDetailModel output = new StockDetailModel();
+            output.StockOrder = await _stockOrde.GetOrder(model, connectionString);
+            output.StockOrderItems = await _stockOrderItems.GetOrderItems(model, connectionString);
+            return output;
 
-                stockDetailModel.StockOrder = await connection.QueryFirstOrDefaultAsync<StockOrderModel>("select branch, sites,orderno, orderdate, invoiceno, invoicedate, doctype" +
-                    " from stk_order " +
-                    "where orderno = @orderno and orderdate = @orderdate and branch = @BranchCode and doctype = @DocType", model);
-
-
-                stockDetailModel.StockOrderItems = connection.QueryAsync<StockOrderItemsModel>("select itemean,trim(barcode) as [barcode] ,unit,actual_qty,free_qty from stk_order_items " +
-                    "where orderno = @orderno and orderdate = @orderdate and branch = @BranchCode and doctype = @DocType", model).Result.ToList();
-            }
-            if (stockDetailModel.StockOrder != null)
-            {
-                stockDetailModel.StockOrder.BranchName = await _basicData.GetBranchNameAsync(stockDetailModel.StockOrder.Branch);
-                stockDetailModel.StockOrder.SiteName = await _basicData.GetBranchNameAsync(stockDetailModel.StockOrder.Sites);
-
-
-                foreach (var item in stockDetailModel.StockOrderItems)
-                {
-                    item.ItemName = await _basicData.GetBarcodeItemNameAsync(item.Barcode);
-                    item.UnitName = await _basicData.GetUnitNameAsync(item.Unit);
-                }
-                return stockDetailModel;
-
-            }
-            else
-            {
-                return null;
-            }
         }
         public async Task<StockInOutDetailModel> GetInOutOrderDetailAsync(StockReviewModel model)
         {
