@@ -1,7 +1,7 @@
-﻿using PdaHub.Helpers;
+﻿using PdaHub.Broker.RunAs;
+using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Repositories.Stock;
-using PdaHub.Services.Stock;
 using SimpleImpersonation;
 using System;
 using System.IO;
@@ -11,34 +11,41 @@ namespace PdaHub.Services.Stock
 {
     public partial class StockService : IStockService
     {
-        private readonly IStockOrderRepository _stockReository;
+        private readonly IStockOrderRepository _repo;
         private readonly iHelper _helper;
-        public StockService(IStockOrderRepository stockReository, iHelper helper)
+        private readonly IRunAs _runAs;
+
+        public StockService(IStockOrderRepository repo, iHelper helper, IRunAs runAs)
         {
-            _stockReository = stockReository;
+            _repo = repo;
             _helper = helper;
+            _runAs = runAs;
         }
 
 
         public Task<SucessResponseModel<StockInOutDetailModel>> SendUpdate(StockReviewModel model) =>
             TryCatch(async () =>
             {
-                var data = await _stockReository.GetInOutOrderDetailAsync(model);
+                StockInOutDetailModel data = new StockInOutDetailModel();
+                data.StockOrderIn = await _repo.GetOrderDetailAsync(model, _helper.PdaHubConnection());
+                if (data.StockOrderIn.StockOrder.Invoicedate.HasValue &&
+                data.StockOrderIn.StockOrder.Invoiceno.HasValue)
+                {
+                    data.StockOrderOut = await _repo.GetOrderDetailAsync(new StockReviewModel
+                    {
+                        BranchCode = data.StockOrderIn.StockOrder.Sites,
+                        DocType = 2052,
+                        OrderNo = data.StockOrderIn.StockOrder.Invoiceno.Value,
+                        OrderDate = data.StockOrderIn.StockOrder.Invoicedate.Value
+                    }, _helper.BranchLocalDB());
+                }
                 var fileBytes = await SaveToExcelByteArrayAsync(data);
                 var filename = GenrateExcelFullFileName(data);
-                RunAsAdminUser(async () => await SaveBytesToFileAsync(filename, fileBytes));
+               _runAs.RunAsAdminUser(async () => await SaveBytesToFileAsync(filename, fileBytes));
 
                 return new SucessResponseModel<StockInOutDetailModel>() { Data = data };
             });
-        private void RunAsAdminUser(Action model)
-        {
-            var credentials = new UserCredentials(@"bGomla\sql.svc", @"PkJ)A96y3q\^41@<;Fu3Zh4J/NT.to");
-            Impersonation.RunAsUser(credentials, LogonType.NetworkCleartext, () =>
-            {
-                model();
-            });
 
-        }
         private Task SaveBytesToFileAsync(string name, byte[] bytes) =>
             File.WriteAllBytesAsync(name, bytes);
 
