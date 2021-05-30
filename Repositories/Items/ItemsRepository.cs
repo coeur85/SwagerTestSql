@@ -1,8 +1,6 @@
-﻿using Dapper;
-using Microsoft.Data.SqlClient;
+﻿using PdaHub.Broker.DataAccess;
 using PdaHub.Helpers;
 using PdaHub.Models;
-using System.Data;
 using System.Threading.Tasks;
 
 namespace PdaHub.Repositories.Items
@@ -10,40 +8,41 @@ namespace PdaHub.Repositories.Items
     public class ItemsRepository : IItemsRepository
     {
         private readonly iHelper _iHelper;
+        private readonly ISqlDataAccess _sqlData;
 
-        public ItemsRepository(iHelper iHelper)
+        public ItemsRepository(iHelper iHelper, ISqlDataAccess sqlData)
         {
             _iHelper = iHelper;
+            _sqlData = sqlData;
         }
 
         public async Task<PosItemEnitityModel> GetPosItem(string barcode)
         {
-            using (IDbConnection connection = new SqlConnection(_iHelper.BranchLocalDB()))
-            {
-                var output = await connection.QueryFirstOrDefaultAsync<PosItemEnitityModel>("select * from pos_items where barcode = @barcode", new { barcode });
-                return output;
-            }
+
+            var output = await _sqlData.QueryFirstOrDefaultAsync<PosItemEnitityModel, dynamic>(_iHelper.BranchLocalDB(),
+                "select * from pos_items where barcode = @barcode", new { barcode });
+            return output;
+
         }
         public async Task<ItemSectionEnitiyModel> GetItemSection(string barcode)
         {
-            using (IDbConnection connection = new SqlConnection(_iHelper.BranchLocalDB()))
-            {
-                var output = await connection.QueryFirstOrDefaultAsync<ItemSectionEnitiyModel>(@"select sec.* from sys_section sec inner join  sys_item si on
+
+            var output = await _sqlData.QueryFirstOrDefaultAsync<ItemSectionEnitiyModel, dynamic>(_iHelper.BranchLocalDB(),
+                @"select sec.* from sys_section sec inner join  sys_item si on
                                                 si.section = sec.section and si.itemclass = sec.itemclass
                                                 inner join sys_item_units siu on siu.itemean = si.itemean
                                                 where siu.barcode = @barcode", new { barcode });
-                return output;
-            }
+            return output;
+
         }
         public async Task<ItemSpecialEnitiyModel> itemSpecial(string barcode)
         {
-            using (IDbConnection connection = new SqlConnection(_iHelper.PdaHubConnection()))
-            {
-                var output = await connection.QueryFirstOrDefaultAsync<ItemSpecialEnitiyModel>
-                    ("select * from mkt_item_special where barcode=@barcode", new { barcode });
-                return output;
-            }
-        }
 
+            var output = await _sqlData.QueryFirstOrDefaultAsync<ItemSpecialEnitiyModel, dynamic>(_iHelper.PdaHubConnection(),
+                "select * from mkt_item_special where barcode=@barcode", new { barcode });
+            return output;
+        }
     }
+
+}
 }
