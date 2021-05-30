@@ -10,9 +10,9 @@ using PdaHub.Repositories.Stock;
 using PdaHub.Services.Items;
 using PdaHub.Services.Stock;
 
-namespace SwaggerTest
+namespace PdaHub
 {
-    public class Startup
+    public partial class Startup
     {
         public Startup(IConfiguration configuration)
         {
@@ -38,15 +38,9 @@ namespace SwaggerTest
 
             });
 
-
-
-            services.AddSingleton<iHelper, Helper>();
-            services.AddSingleton<IStockOrderRepository, StockRepository>();
-            services.AddSingleton<IStockService, StockService>();
-            services.AddSingleton<IBasicDataRepository, BasicDataRepository>();
-            services.AddSingleton<IItemsRepository, ItemsRepository>();
-            services.AddSingleton<IItemsServices, ItemsServices>();
+            AddDependency(services);
         }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

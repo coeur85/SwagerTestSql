@@ -1,4 +1,5 @@
 ﻿using PdaHub.Models;
+using PdaHub.Models.Stock;
 using PdaHub.Repositories.Stock.Order;
 using PdaHub.Repositories.Stock.OrderItems;
 using System.Threading.Tasks;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PdaHub.Repositories.Stock
 {
-    public class StockRepository : IStockOrderRepository
+    public class StockRepository : IStockRepository
     {
 
         private readonly IStockOrder _stockOrde;

@@ -1,4 +1,4 @@
-﻿namespace PdaHub.Models.Extinctions
+﻿namespace PdaHub.Models
 {
     public record NameingModel
     {

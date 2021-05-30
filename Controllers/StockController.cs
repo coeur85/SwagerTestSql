@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
+using PdaHub.Models.Stock;
 using PdaHub.Services.Stock;
 using System.Net;
 using System.Threading.Tasks;

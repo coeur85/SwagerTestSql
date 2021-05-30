@@ -1,6 +1,7 @@
 ﻿using PdaHub.Broker.RunAs;
 using PdaHub.Helpers;
 using PdaHub.Models;
+using PdaHub.Models.Stock;
 using PdaHub.Repositories.Stock;
 using SimpleImpersonation;
 using System;
@@ -11,11 +12,11 @@ namespace PdaHub.Services.Stock
 {
     public partial class StockService : IStockService
     {
-        private readonly IStockOrderRepository _repo;
+        private readonly IStockRepository _repo;
         private readonly iHelper _helper;
         private readonly IRunAs _runAs;
 
-        public StockService(IStockOrderRepository repo, iHelper helper, IRunAs runAs)
+        public StockService(IStockRepository repo, iHelper helper, IRunAs runAs)
         {
             _repo = repo;
             _helper = helper;

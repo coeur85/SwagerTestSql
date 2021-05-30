@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace PdaHub.Models
+namespace PdaHub.Models.Stock
 {
     public record StockReviewModel
     {
