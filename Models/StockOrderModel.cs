@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PdaHub.Models
 {
-    public class StockReviewModel
+    public record StockReviewModel
     {
         public int BranchCode { get; set; }
 
@@ -15,7 +15,7 @@ namespace PdaHub.Models
         public int DocType { get; set; }
 
     }
-    public class StockOrderModel
+    public record StockOrderModel
     {
         public int Branch { get; set; }
         public int Sites { get; set; }
@@ -30,7 +30,7 @@ namespace PdaHub.Models
 
         public int DocType { get; set; }
     }
-    public class StockOrderItemsModel
+    public record StockOrderItemsModel
     {
         public int Itemean { get; set; }
         public string Barcode { get; set; }
@@ -44,17 +44,17 @@ namespace PdaHub.Models
 
 
     }
-    public class StockInOutDetailModel
+    public record StockInOutDetailModel
     {
         public StockDetailModel StockOrderIn { get; set; }
         public StockDetailModel StockOrderOut { get; set; }
     }
-    public class StockDetailModel
+    public record StockDetailModel
     {
         public StockOrderModel StockOrder { get; set; }
         public List<StockOrderItemsModel> StockOrderItems { get; set; } = new List<StockOrderItemsModel>();
     }
-    public class XlsFile
+    public record XlsFile
     {
         public string FileName { get; set; }
         public ExcelPackage FileData { get; set; } = new ExcelPackage();

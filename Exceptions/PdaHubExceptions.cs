@@ -1,22 +1,23 @@
-﻿using System;
+﻿using PdaHub.Models;
+using System;
 using System.Collections.Generic;
 
-namespace PdaHub.Models
+namespace PdaHub.Exceptions
 {
-    public class PdaHubExceptionsModel : Exception
+    public class PdaHubExceptions : Exception
     {
-        public PdaHubExceptionsModel(string error) : base(error)
+        public PdaHubExceptions(string error) : base(error)
         {
 
         }
-        public PdaHubExceptionsModel()
+        public PdaHubExceptions()
         {
 
         }
         public List<MessageDataModel> Messages { get; set; } = new();
     }
 
-    public class ItemsExceptions : PdaHubExceptionsModel
+    public class ItemsExceptions : PdaHubExceptions
     {
         public ItemsExceptions()
         {

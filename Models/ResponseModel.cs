@@ -2,12 +2,12 @@
 
 namespace PdaHub.Models
 {
-    public class ResponseModel
+    public record ResponseModel
     {
         public bool Succsess { get; set; }
         public List<MessageDataModel> Messages { get; set; } = new();
     }
-    public class SucessResponseModel<T> : ResponseModel
+    public record SucessResponseModel<T> : ResponseModel
     {
         public SucessResponseModel()
         {
@@ -27,7 +27,7 @@ namespace PdaHub.Models
 
 
 
-    public class ErrorResponseModel : ResponseModel
+    public record ErrorResponseModel : ResponseModel
     {
         public ErrorResponseModel()
         {
@@ -56,7 +56,7 @@ namespace PdaHub.Models
 
 
 
-    public class MessageDataModel
+    public record MessageDataModel
     {
         /// <summary> test </summary>
         /// 0   Success,

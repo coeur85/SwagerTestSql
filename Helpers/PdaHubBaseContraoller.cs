@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PdaHub.Exceptions;
 using PdaHub.Models;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ namespace PdaHub.Helpers
             {
                 return await model();
             }
-            catch (PdaHubExceptionsModel ex)
+            catch (PdaHubExceptions ex)
             {
 
                 return BadRequest(new ErrorResponseModel(ex.Messages));
