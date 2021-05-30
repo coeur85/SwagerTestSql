@@ -7,6 +7,7 @@ using PdaHub.Repositories.Items;
 using PdaHub.Repositories.Stock;
 using PdaHub.Repositories.Stock.Order;
 using PdaHub.Repositories.Stock.OrderItems;
+using PdaHub.Services.Accounts;
 using PdaHub.Services.Items;
 using PdaHub.Services.Stock;
 
@@ -30,6 +31,9 @@ namespace PdaHub
 
             services.AddSingleton<IItemsRepository, ItemsRepository>();
             services.AddSingleton<IItemsServices, ItemsServices>();
+
+            services.AddSingleton<IAccountsServices, AccountsServices>();
+           
         }
     }
 }

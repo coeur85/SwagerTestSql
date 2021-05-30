@@ -20,7 +20,7 @@ namespace PdaHub.Repositories.Accounts
         }
 
 
-        public async Task<List<UserNameModel>> GetAllowedUsers()
+        public async Task<List<UserNameModel>> GetAllowedUsersAsync()
         {
             var branch = await _helper.GetBranchCodeAsync();
             var output = await _dataAccess.QueryAsync<UserNameModel>(_helper.BranchLocalDB(),
