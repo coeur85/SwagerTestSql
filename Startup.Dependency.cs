@@ -2,6 +2,7 @@
 using PdaHub.Broker.DataAccess;
 using PdaHub.Broker.RunAs;
 using PdaHub.Helpers;
+using PdaHub.Repositories.Accounts;
 using PdaHub.Repositories.BasicData;
 using PdaHub.Repositories.Items;
 using PdaHub.Repositories.Stock;
@@ -33,6 +34,7 @@ namespace PdaHub
             services.AddSingleton<IItemsServices, ItemsServices>();
 
             services.AddSingleton<IAccountsServices, AccountsServices>();
+            services.AddSingleton<IAccountsRepository, AccountsRepository>();
            
         }
     }

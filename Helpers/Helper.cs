@@ -27,7 +27,7 @@ namespace PdaHub.Helpers
         public async ValueTask<int> GetBranchCodeAsync()
         {
             if(BranchCode == 0)
-                BranchCode= await _dataAccess.QuerySingleAsync<int>(BranchLocalDB(), "select paramter from sys_setup where setting = 'cbranch'");
+                BranchCode= await _dataAccess.QuerySingleAsync<int>(BranchLocalDB(), "select setting  from sys_setup where parameter  = 'cbranch'");
 
             return BranchCode;
         }
