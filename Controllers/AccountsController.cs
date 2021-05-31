@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
@@ -12,7 +13,7 @@ namespace PdaHub.Controllers
 
     [ApiController]
     [Route("[controller]")]
-    [AllowAnonymous]
+   
     public class AccountsController : PdaHubBaseContraoller
     {
         private readonly IAccountsServices _services;
@@ -34,6 +35,17 @@ namespace PdaHub.Controllers
                 var output = await _services.LoginAsync(model);
                 return Ok(output);
             });
+      
+        [HttpGet("Permissions")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public Task<ActionResult<SucessResponseModel<string>>> Permissions()
+         => TryCatch<string>(async () =>
+         {
+             SucessResponseModel<string> sucessResponseModel = new SucessResponseModel<string>();
+             sucessResponseModel.Data = User.Identity.Name;
+             return Ok(sucessResponseModel);
+         });
+
 
     }
 }

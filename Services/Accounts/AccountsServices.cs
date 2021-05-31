@@ -24,6 +24,8 @@ namespace PdaHub.Services.Accounts
         }
 
 
+
+
         public Task<SucessResponseModel<List<UserNameModel>>> GetAllowdUsersAsync()
             => TryCatch(async () =>
             {
@@ -32,7 +34,6 @@ namespace PdaHub.Services.Accounts
                 output.Data = users;
                 return output;
             });
-
         public Task<SucessResponseModel<LoginSucess>> LoginAsync(LoginModel model)
             => TryCatch(async () => {
                 var encPass = EncString(model.Password);
@@ -42,10 +43,6 @@ namespace PdaHub.Services.Accounts
                 LoginSucess login = new LoginSucess(accouut, token);
                 return new SucessResponseModel<LoginSucess> { Data = login };
             });
-
-
-
-
 
         private string GenrateToken(AccountModel model)
         {
@@ -57,15 +54,14 @@ namespace PdaHub.Services.Accounts
                 {
                         new Claim("Id", model.UserID.ToString()),
                         new Claim(JwtRegisteredClaimNames.NameId,model.ArabicTitle),
-                        new Claim(JwtRegisteredClaimNames.GivenName, model.EnglishTitle),
+                        new Claim(JwtRegisteredClaimNames.GivenName, model.EnglishTitle)
 
+                }),
 
-                    }),
+                Expires = DateTime.Now.AddHours(2),
 
-                Expires = DateTime.UtcNow.AddYears(10),
-
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature),
-                Audience = "azure.bgomla.com"
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha512Signature),
 
             };
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
