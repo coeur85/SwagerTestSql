@@ -9,5 +9,6 @@ namespace PdaHub.Helpers
         public string BranchLocalDB();
         public string ExcelSaveRoot();
         ValueTask<int> GetBranchCodeAsync();
+        string AuthSecret();
     }
 }

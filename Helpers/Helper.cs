@@ -24,6 +24,8 @@ namespace PdaHub.Helpers
             _configuration.GetConnectionString("LocalRetail");
         public string ExcelSaveRoot() =>
           _configuration.GetSection("ExcelSaveRoot").Value;
+        public string AuthSecret()
+            => _configuration.GetSection("AuthSecret").Value;
         public async ValueTask<int> GetBranchCodeAsync()
         {
             if(BranchCode == 0)

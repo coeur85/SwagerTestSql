@@ -7,5 +7,6 @@ namespace PdaHub.Repositories.Accounts
     public interface IAccountsRepository
     {
         Task<List<UserNameModel>> GetAllowedUsersAsync();
+        Task<AccountModel> FindActiveAccountAsync(int UserID, string Password);
     }
 }

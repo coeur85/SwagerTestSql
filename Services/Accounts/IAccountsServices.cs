@@ -8,5 +8,6 @@ namespace PdaHub.Services.Accounts
     public interface IAccountsServices
     {
         Task<SucessResponseModel<List<UserNameModel>>> GetAllowdUsersAsync();
+        Task<SucessResponseModel<LoginSucess>> LoginAsync(LoginModel model);
     }
 }

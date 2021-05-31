@@ -29,5 +29,13 @@ namespace PdaHub.Repositories.Accounts
             return output.ToList();
         }
 
+        public async Task<AccountModel> FindActiveAccountAsync(int UserID,string Password)
+        {
+            AccountModel output = await _dataAccess.QueryFirstOrDefaultAsync<AccountModel, dynamic>
+                (_helper.BranchLocalDB(), @"SELECT [userid] as [UserID],[a_name] as [ArabicTitle],[l_name] as [EnglishTitle] FROM [sys_login] 
+                where [userid]= @userid and [userpass]=@userpass and [locked] = 0", new { userid = UserID, userpass = Password });
+            return output;
+        }
+
     }
 }

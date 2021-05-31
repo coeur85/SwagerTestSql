@@ -27,5 +27,13 @@ namespace PdaHub.Controllers
                 var output = await _services.GetAllowdUsersAsync();
                 return Ok(output);
             });
+        [HttpPost("login")]
+        public Task<ActionResult<SucessResponseModel<LoginSucess>>> Login(LoginModel model)
+            => TryCatch<LoginSucess>(async () =>
+            {
+                var output = await _services.LoginAsync(model);
+                return Ok(output);
+            });
+
     }
 }
