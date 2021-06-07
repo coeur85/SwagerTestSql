@@ -23,9 +23,6 @@ namespace PdaHub.Services.Accounts
             _secret = helper.AuthSecret();
         }
 
-
-
-
         public Task<SucessResponseModel<List<UserNameModel>>> GetAllowdUsersAsync()
             => TryCatch(async () =>
             {
@@ -34,15 +31,24 @@ namespace PdaHub.Services.Accounts
                 output.Data = users;
                 return output;
             });
-        public Task<SucessResponseModel<LoginSucess>> LoginAsync(LoginModel model)
+        public Task<SucessResponseModel<LoginSucessModel>> LoginAsync(LoginModel model)
             => TryCatch(async () => {
                 var encPass = EncString(model.Password);
                 var accouut = await _repo.FindActiveAccountAsync(model.UserID, encPass);
                 ValidateLoginAccount(accouut);
                 string token = GenrateToken(accouut);
-                LoginSucess login = new LoginSucess(accouut, token);
-                return new SucessResponseModel<LoginSucess> { Data = login };
+                LoginSucessModel login = new LoginSucessModel(accouut, token);
+                return new SucessResponseModel<LoginSucessModel> { Data = login };
             });
+        public Task<SucessResponseModel<List<DocTypeModel>>> PermissionsAsync(ClaimsPrincipal User)
+           => TryCatch(async () => {
+               int userid = Convert.ToInt32(User.FindFirst("Id").Value);
+               var output = await _repo.GetUserPermissionsAsync(userid);
+               return new SucessResponseModel<List<DocTypeModel>> { Data = output };
+           });
+
+
+
 
         private string GenrateToken(AccountModel model)
         {

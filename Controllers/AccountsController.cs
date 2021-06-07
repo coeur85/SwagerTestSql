@@ -29,22 +29,21 @@ namespace PdaHub.Controllers
                 return Ok(output);
             });
         [HttpPost("login")]
-        public Task<ActionResult<SucessResponseModel<LoginSucess>>> Login(LoginModel model)
-            => TryCatch<LoginSucess>(async () =>
+        public Task<ActionResult<SucessResponseModel<LoginSucessModel>>> Login(LoginModel model)
+            => TryCatch<LoginSucessModel>(async () =>
             {
                 var output = await _services.LoginAsync(model);
                 return Ok(output);
             });
-      
+
         [HttpGet("Permissions")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public Task<ActionResult<SucessResponseModel<string>>> Permissions()
-         => TryCatch<string>(async () =>
-         {
-             SucessResponseModel<string> sucessResponseModel = new SucessResponseModel<string>();
-             sucessResponseModel.Data = User.Identity.Name;
-             return Ok(sucessResponseModel);
-         });
+        public Task<ActionResult<SucessResponseModel<List<DocTypeModel>>>> Permissions()
+         => TryCatch<List<DocTypeModel>>(async () =>
+        {
+            var output = await _services.PermissionsAsync(User);
+            return Ok(output);
+        });
 
 
     }

@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.6" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.1" />
     <PackageReference Include="SimpleImpersonation" Version="3.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="6.0.7" />

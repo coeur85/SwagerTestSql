@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using PdaHub.Helpers;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace PdaHub
 {
@@ -31,8 +32,19 @@ namespace PdaHub
 
                 });
                 c.SchemaFilter<NSwageSchemaFilter>();
+                c.AddSecurityDefinition("oauth2", new  OpenApiSecurityScheme
+                {
+                    Description = "Standard Authorization header using the Bearer scheme. Example: \"bearer {token}\"",
+                    In = ParameterLocation.Header,
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey 
+                });
+
+                c.OperationFilter<SecurityRequirementsOperationFilter>();
 
             });
+
+
 
             AddDependency(services);
             AddAuthentication(services);

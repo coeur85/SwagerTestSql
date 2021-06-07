@@ -23,7 +23,7 @@ namespace PdaHub.Broker.DataAccess
         public async Task<IEnumerable<T>> QueryAsync<T, U>(string connectionString, string sqlQury, U paramters)
         {
             using IDbConnection connection = new SqlConnection(connectionString);
-            return await connection.QueryAsync<T>(sqlQury, paramters);
+            return await connection.QueryAsync<T>(sqlQury, param: paramters);
         }
         public async Task<IEnumerable<T>> QueryAsync<T>(string connectionString, string sqlQury)
         {
