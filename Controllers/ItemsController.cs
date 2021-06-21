@@ -26,7 +26,7 @@ namespace PdaHub.Controllers
         public Task<ActionResult<SucessResponseModel<ItemDetailsResponseModel>>> Get(string barcode)
             => TryCatch<ItemDetailsResponseModel>(async () =>
             {
-                var output = await _itemsServices.GetPosItem(barcode);
+                var output = await _itemsServices.GetPosItemAsync(barcode);
                 return Ok(output);
             });
 
