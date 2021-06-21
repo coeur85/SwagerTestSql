@@ -23,8 +23,8 @@ namespace PdaHub.Services.Items
         }
 
 
-        private delegate Task<SucessResponseModel<List<PromotionItemDetailsResponseModel>>> SearchPromoDeletget();
-        private async Task<SucessResponseModel<List<PromotionItemDetailsResponseModel>>> TryCatch(SearchPromoDeletget model)
+        private delegate Task<SucessResponseModel<PromotionItemsReponseModel>> SearchPromoDeletget();
+        private async Task<SucessResponseModel<PromotionItemsReponseModel>> TryCatch(SearchPromoDeletget model)
         {
             try
             {

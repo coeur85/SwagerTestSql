@@ -2,15 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace PdaHub.Services.Items
+namespace PdaHub.Broker.Mapper
 {
-    public partial class ItemsServices
+    public partial class Mapper
     {
-        private NameingModel ItemName(PosItemEnitityModel dbModel)
+        private NamingModel ItemName(PosItemEnitityModel dbModel)
         {
-            NameingModel output = new() { ArabicName = dbModel.a_name, EnglsihName = dbModel.l_name };
+            NamingModel output = new() { ArabicName = dbModel.a_name, EnglsihName = dbModel.l_name };
 
             if (HasArabicLetters(dbModel.l_name))
             {
@@ -55,6 +56,13 @@ namespace PdaHub.Services.Items
 
 
             return output;
+        }
+        private bool HasArabicLetters(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return false;
+            Regex regex = new Regex("[\u0600-\u06ff]|[\u0750-\u077f]|[\ufb50-\ufc3f]|[\ufe70-\ufefc]");
+            return regex.IsMatch(text);
         }
     }
 }

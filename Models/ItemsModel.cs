@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace PdaHub.Models
 {
@@ -70,7 +71,7 @@ namespace PdaHub.Models
     }
 
 
-    public record PromotionItemDetailsResponseModel
+    public record PromotionItemDetailsModel
     {
         public Header Header { get; set; }
         public Body Body { get; set; }
@@ -84,12 +85,12 @@ namespace PdaHub.Models
     }
     public record Body
     {
-        public float Price { get; set; }
+        public decimal Price { get; set; }
         public Descriptionarea DescriptionArea { get; set; }
     }
     public record Descriptionarea
     {
-        public bool isDivided { get; set; }
+        public bool IsDivided { get; set; }
         public bool DescriptionLineTwoDrowX { get; set; }
         public string DescriptionLineOne { get; set; }
         public string DescriptionLineTwo { get; set; }
@@ -101,6 +102,12 @@ namespace PdaHub.Models
         public string PrintDate { get; set; }
         public int PromotionNumber { get; set; }
         public string PromotionExpireDate { get; set; }
+        public bool DrowDescriptionCenterAsBarcode { get; set; }
+    }
+
+    public record PromotionItemsReponseModel
+    {
+        public List<PromotionItemDetailsModel> Items { get; set; } = new();
     }
 
 }

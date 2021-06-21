@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Services.Items;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace PdaHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+   // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ItemsController : PdaHubBaseContraoller
     {
         private readonly IItemsServices _itemsServices;
@@ -23,13 +24,23 @@ namespace PdaHub.Controllers
         [HttpGet("{barcode}")]
         [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.BadRequest)]
-        public Task<ActionResult<SucessResponseModel<ItemDetailsResponseModel>>> Get(string barcode)
+        public Task<ActionResult<SucessResponseModel<ItemDetailsResponseModel>>> GetItemAsync(string barcode)
             => TryCatch<ItemDetailsResponseModel>(async () =>
             {
                 var output = await _itemsServices.GetPosItemAsync(barcode);
                 return Ok(output);
             });
 
+        
 
+        [HttpGet("Promotion/{PromotionNumber}")]
+        [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.BadRequest)]
+        public Task<ActionResult<SucessResponseModel<PromotionItemsReponseModel>>> GetPromotionItmesAsync(int PromotionNumber)
+            => TryCatch<PromotionItemsReponseModel>(async () =>
+            {
+                var output = await _itemsServices.GetPromotionItemsAsync(PromotionNumber);
+                return Ok(output);
+            });
     }
 }

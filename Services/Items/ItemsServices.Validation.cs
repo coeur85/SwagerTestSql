@@ -50,13 +50,7 @@ namespace PdaHub.Services.Items
             if (model is null)
                 throw new ItemsExceptions("No items where found, please check your barcode");
         }
-        private bool HasArabicLetters(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return false;
-            Regex regex = new Regex("[\u0600-\u06ff]|[\u0750-\u077f]|[\ufb50-\ufc3f]|[\ufe70-\ufefc]");
-            return regex.IsMatch(text);
-        }
+       
 
         private void ValidatePromotion(int DiscountNo, List<PosItemEnitityModel> model)
         {

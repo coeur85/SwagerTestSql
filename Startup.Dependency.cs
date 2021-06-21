@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PdaHub.Broker.DataAccess;
+using PdaHub.Broker.Mapper;
 using PdaHub.Broker.RunAs;
 using PdaHub.Helpers;
 using PdaHub.Repositories.Accounts;
@@ -22,6 +23,7 @@ namespace PdaHub
             services.AddSingleton<iHelper, Helper>();
             services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
             services.AddSingleton<IRunAs, RunAs>();
+            services.AddSingleton<IMapper, Mapper>();
 
 
             services.AddSingleton<IBasicDataRepository, BasicDataRepository>();
