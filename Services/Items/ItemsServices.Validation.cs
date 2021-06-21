@@ -15,9 +15,9 @@ namespace PdaHub.Services.Items
         }
         private void CheckPromos(PosItemEnitityModel model)
         {
-            if (model.date_from.HasValue && model.date_to.HasValue)
+            if (model.date_from.HasValue && model.date_to.HasValue && model.usage.HasValue)
             {
-                if (DateTime.Now > model.date_from && DateTime.Now < model.date_to)
+                if (DateTime.Now > model.date_from && DateTime.Now < model.date_to && model.usage.Value == 1)
                 {
                     throw new ItemsExceptions(
                         new string[]{ @"the item has an active promotion and can not be printed by this app right now",

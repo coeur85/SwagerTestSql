@@ -16,9 +16,9 @@ namespace PdaHub.Services.Items
             => TryCatch(async () =>
             {
                 barcode = barcode.Trim();
-                var dbModel = await _itemsRepository.GetPosItem(barcode);
-                var catModel = await _itemsRepository.GetItemSection(barcode);
-                var specialItemModel = await _itemsRepository.itemSpecial(barcode);
+                var dbModel = await _itemsRepository.GetPosItemAsync(barcode);
+                var catModel = await _itemsRepository.GetItemSectionAsync(barcode);
+                var specialItemModel = await _itemsRepository.ItemSpecialAsync(barcode);
                 ValidatePosItem(dbModel);
                 var modelName = ItemName(dbModel);
                 ItemDetailsResponseModel item = new ItemDetailsResponseModel

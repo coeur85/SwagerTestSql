@@ -69,6 +69,40 @@ namespace PdaHub.Models
         public string Notes { get; set; }
     }
 
+
+    public record PromotionItemDetailsResponseModel
+    {
+        public Header Header { get; set; }
+        public Body Body { get; set; }
+        public Footer Footer { get; set; }
+    }
+    public record Header
+    {
+        public string CategoryName { get; set; }
+        public string ArabicName { get; set; }
+        public string EnglishName { get; set; }
+    }
+    public record Body
+    {
+        public float Price { get; set; }
+        public Descriptionarea DescriptionArea { get; set; }
+    }
+    public record Descriptionarea
+    {
+        public bool isDivided { get; set; }
+        public bool DescriptionLineTwoDrowX { get; set; }
+        public string DescriptionLineOne { get; set; }
+        public string DescriptionLineTwo { get; set; }
+    }
+    public record Footer
+    {
+        public string DescriptionRight { get; set; }
+        public string DescriptionCenter { get; set; }
+        public string PrintDate { get; set; }
+        public int PromotionNumber { get; set; }
+        public string PromotionExpireDate { get; set; }
+    }
+
 }
 
 

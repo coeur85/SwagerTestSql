@@ -35,7 +35,6 @@ namespace PdaHub.Controllers
                 var output = await _services.LoginAsync(model);
                 return Ok(output);
             });
-
         [HttpGet("Permissions")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public Task<ActionResult<SucessResponseModel<List<DocTypeModel>>>> Permissions()

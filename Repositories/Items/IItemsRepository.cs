@@ -5,8 +5,8 @@ namespace PdaHub.Repositories.Items
 {
     public interface IItemsRepository
     {
-        Task<ItemSectionEnitiyModel> GetItemSection(string barcode);
-        Task<PosItemEnitityModel> GetPosItem(string barcode);
-        Task<ItemSpecialEnitiyModel> itemSpecial(string barcode);
+        Task<ItemSectionEnitiyModel> GetItemSectionAsync(string barcode);
+        Task<PosItemEnitityModel> GetPosItemAsync(string barcode);
+        Task<ItemSpecialEnitiyModel> ItemSpecialAsync(string barcode);
     }
 }

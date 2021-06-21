@@ -1,6 +1,7 @@
 ﻿using PdaHub.Broker.DataAccess;
 using PdaHub.Helpers;
 using PdaHub.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PdaHub.Repositories.Items
@@ -16,7 +17,7 @@ namespace PdaHub.Repositories.Items
             _sqlData = sqlData;
         }
 
-        public async Task<PosItemEnitityModel> GetPosItem(string barcode)
+        public async Task<PosItemEnitityModel> GetPosItemAsync(string barcode)
         {
 
             var output = await _sqlData.QueryFirstOrDefaultAsync<PosItemEnitityModel, dynamic>(_iHelper.BranchLocalDB(),
@@ -24,7 +25,7 @@ namespace PdaHub.Repositories.Items
             return output;
 
         }
-        public async Task<ItemSectionEnitiyModel> GetItemSection(string barcode)
+        public async Task<ItemSectionEnitiyModel> GetItemSectionAsync(string barcode)
         {
 
             var output = await _sqlData.QueryFirstOrDefaultAsync<ItemSectionEnitiyModel, dynamic>(_iHelper.BranchLocalDB(),
@@ -35,11 +36,17 @@ namespace PdaHub.Repositories.Items
             return output;
 
         }
-        public async Task<ItemSpecialEnitiyModel> itemSpecial(string barcode)
+        public async Task<ItemSpecialEnitiyModel> ItemSpecialAsync(string barcode)
         {
 
             var output = await _sqlData.QueryFirstOrDefaultAsync<ItemSpecialEnitiyModel, dynamic>(_iHelper.PdaHubConnection(),
                 "select * from mkt_item_special where barcode=@barcode", new { barcode });
+            return output;
+        }
+        public async Task<List<PosItemEnitityModel>> GetItemsInPromo(int PromotionCode)
+        {
+            var output = await _sqlData.QueryFirstOrDefaultAsync<PosItemEnitityModel, dynamic>(_iHelper.BranchLocalDB(),
+                "select * from pos_items where barcode = @barcode", new { barcode });
             return output;
         }
     }
