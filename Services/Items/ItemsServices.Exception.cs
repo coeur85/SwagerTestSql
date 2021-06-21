@@ -1,5 +1,6 @@
 ﻿using PdaHub.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PdaHub.Services.Items
@@ -21,5 +22,19 @@ namespace PdaHub.Services.Items
             }
         }
 
+
+        private delegate Task<SucessResponseModel<List<PromotionItemDetailsResponseModel>>> SearchPromoDeletget();
+        private async Task<SucessResponseModel<List<PromotionItemDetailsResponseModel>>> TryCatch(SearchPromoDeletget model)
+        {
+            try
+            {
+                return await model();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
     }
 }
