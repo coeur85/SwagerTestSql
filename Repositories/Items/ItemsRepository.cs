@@ -2,6 +2,7 @@
 using PdaHub.Helpers;
 using PdaHub.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PdaHub.Repositories.Items
@@ -43,11 +44,11 @@ namespace PdaHub.Repositories.Items
                 "select * from mkt_item_special where barcode=@barcode", new { barcode });
             return output;
         }
-        public async Task<List<PosItemEnitityModel>> GetItemsInPromo(int PromotionCode)
+        public async Task<List<PosItemEnitityModel>> GetItemsInPromo(int DiscountNo)
         {
-            var output = await _sqlData.QueryFirstOrDefaultAsync<PosItemEnitityModel, dynamic>(_iHelper.BranchLocalDB(),
-                "select * from pos_items where barcode = @barcode", new { barcode });
-            return output;
+            var output = await _sqlData.QueryAsync<PosItemEnitityModel, dynamic>(_iHelper.BranchLocalDB(),
+                "select * from pos_items where discountno = @discountno", new { discountno =  DiscountNo });
+            return output.ToList();
         }
     }
 
