@@ -33,13 +33,13 @@ namespace PdaHub.Controllers
 
         
 
-        [HttpGet("Promotion/{PromotionNumber}")]
+        [HttpGet("Promotion/{SearchCode}")]
         [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.BadRequest)]
-        public Task<ActionResult<SucessResponseModel<PromotionItemsReponseModel>>> GetPromotionItmesAsync(int PromotionNumber)
+        public Task<ActionResult<SucessResponseModel<PromotionItemsReponseModel>>> GetPromotionItmesAsync(string SearchCode)
             => TryCatch<PromotionItemsReponseModel>(async () =>
             {
-                var output = await _itemsServices.GetPromotionItemsAsync(PromotionNumber);
+                var output = await _itemsServices.GetPromotionItemsAsync(SearchCode);
                 return Ok(output);
             });
     }

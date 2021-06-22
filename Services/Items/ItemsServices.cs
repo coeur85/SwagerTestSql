@@ -37,12 +37,17 @@ namespace PdaHub.Services.Items
                     $"-{dbModel.last_modified_time.ToShortTimeString()}", MessageType.Information);
                 return output;
             });
-        public Task<SucessResponseModel<PromotionItemsReponseModel>> GetPromotionItemsAsync(int DiscountNo)
+        public Task<SucessResponseModel<PromotionItemsReponseModel>> GetPromotionItemsAsync(string Code)
           => TryCatch(async () =>
           {
+              var promoId =  ValidateGetSearchCode(Code);
+              List<PosItemEnitityModel> items = await _itemsRepository.GetItemsInPromo(promoId);
+              if(items.Count ==0){
+                  items.Add(await _itemsRepository.GetPosItemAsync(Code.Trim()));
+              }
 
-              var items = await _itemsRepository.GetItemsInPromo(DiscountNo);
-              ValidatePromotion(DiscountNo, items);
+              
+              ValidatePromotion(Code, items);
               int discountType = items.First().discounttype.Value;
               PromotionItemsReponseModel output = new();
               switch (discountType)

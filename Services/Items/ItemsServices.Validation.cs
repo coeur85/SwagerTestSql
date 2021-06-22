@@ -50,9 +50,7 @@ namespace PdaHub.Services.Items
             if (model is null)
                 throw new ItemsExceptions("No items where found, please check your barcode");
         }
-       
-
-        private void ValidatePromotion(int DiscountNo, List<PosItemEnitityModel> model)
+        private void ValidatePromotion(string DiscountNo, List<PosItemEnitityModel> model)
         {
             if (model.Count == 0)
                 throw new PromotionsExceptions(new string[]
@@ -83,6 +81,18 @@ namespace PdaHub.Services.Items
 
 
 
+        }
+    
+        private long ValidateGetSearchCode(string Code){
+            try
+            {
+                return Convert.ToInt64(Code);
+            }
+            catch (System.Exception)
+            {
+                
+                throw new PromotionsExceptions("invalied search code !");
+            }
         }
     }
 }

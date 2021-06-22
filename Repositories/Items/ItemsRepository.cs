@@ -44,7 +44,7 @@ namespace PdaHub.Repositories.Items
                 "select * from mkt_item_special where barcode=@barcode", new { barcode });
             return output;
         }
-        public async Task<List<PosItemEnitityModel>> GetItemsInPromo(int DiscountNo)
+        public async Task<List<PosItemEnitityModel>> GetItemsInPromo(long DiscountNo)
         {
             var output = await _sqlData.QueryAsync<PosItemEnitityModel, dynamic>(_iHelper.BranchLocalDB(),
                 "select * from pos_items where discountno = @discountno", new { discountno =  DiscountNo });
