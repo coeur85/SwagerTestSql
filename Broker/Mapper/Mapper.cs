@@ -11,8 +11,6 @@ namespace PdaHub.Broker.Mapper
     {
         public PromotionItemDetailsModel MapPromoType102(PosItemEnitityModel model, ItemSectionEnitiyModel catModel)
         {
-            NamingModel modelName = ItemName(model);
-            NamingModel promoDiscription = DiscripPromo101(model);
             return new PromotionItemDetailsModel
             {
                 Header = MapHeader(model,catModel) ,
@@ -23,8 +21,8 @@ namespace PdaHub.Broker.Mapper
                     {
                         IsDivided = true,
                         DescriptionLineTwoDrowX = true,
-                        DescriptionLineOne = promoDiscription.LineOne,
-                        DescriptionLineTwo = promoDiscription.LineTwo
+                        DescriptionLineOne = "بدلا من :",
+                        DescriptionLineTwo = model.sell_price.Value.ToString()
                     }
 
                 },
@@ -36,9 +34,10 @@ namespace PdaHub.Broker.Mapper
         }
         public PromotionItemDetailsModel MapPromoType101(PosItemEnitityModel model, ItemSectionEnitiyModel catModel)
         {
-            
+            NamingModel discripPromo = DiscripPromo101(model);
             return new PromotionItemDetailsModel
             {
+               
                 Header = MapHeader(model,catModel) ,
                 Body = new Body
                 {
@@ -47,8 +46,8 @@ namespace PdaHub.Broker.Mapper
                     {
                         IsDivided = false,
                         DescriptionLineTwoDrowX = false,
-                        DescriptionLineOne = "",
-                        DescriptionLineTwo = model.sell_price.Value.ToString()
+                        DescriptionLineOne = discripPromo.LineOne,
+                        DescriptionLineTwo = discripPromo.LineTwo
                     }
 
                 },
@@ -81,7 +80,7 @@ namespace PdaHub.Broker.Mapper
         private Header MapHeader(PosItemEnitityModel model, ItemSectionEnitiyModel catModel){
             NamingModel modelName = ItemName(model);
             return new Header {
-                     CategoryName = catModel.a_name,
+                    CategoryName = catModel.a_name,
                     ArabicName = modelName.LineOne,
                     EnglishName = modelName.LineTwo
 

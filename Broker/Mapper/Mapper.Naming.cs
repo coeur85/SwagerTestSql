@@ -78,7 +78,7 @@ namespace PdaHub.Broker.Mapper
                     output.LineTwo = UniteName(model.barcode) +" هدية ";
                    
                     break;
-                case  0.5 :
+                case <= 0.5 and >= 0.49  :
                     output.LineOne = UniteName(model.barcode)+ " + ";
                     output.LineTwo = "نصف هدية";
                     break;
