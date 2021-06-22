@@ -73,18 +73,40 @@ namespace PdaHub.Broker.Mapper
             double discountAmount = Convert.ToDouble(discountPercent / orginalPricePercent);
             switch (discountAmount)
             {
-                case > 0.5 :
-                    output.LineOne = "";
+                case 1:
+                    output.LineOne = UniteName(model.barcode)+ " + ";;
+                    output.LineTwo = UniteName(model.barcode) +" هدية ";
+                   
+                    break;
+                case  0.5 :
+                    output.LineOne = UniteName(model.barcode)+ " + ";
                     output.LineTwo = "نصف هدية";
                     break;
 
-                
+                case 0.25 :
+                    output.LineOne = UniteName(model.barcode)+ " + ";
+                    output.LineTwo = "ربع هدية";
+                    break;
                 default:
+                    output.LineOne = "خصم ";
+                    output.LineTwo = $"{discountAmount}%";
                     break;
             }
 
 
-            return default;
+
+            return output;
+        }
+
+        private string UniteName(string barcode){
+            if(barcode.Trim().StartsWith("23"))
+            {
+                return "كيلو";
+            }
+            else{
+                return "قطعة";
+            }
+
         }
     
     }

@@ -1,5 +1,6 @@
 ﻿using PdaHub.Broker.Mapper;
 using PdaHub.Models;
+using PdaHub.Repositories.BasicData;
 using PdaHub.Repositories.Items;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +11,14 @@ namespace PdaHub.Services.Items
     public partial class ItemsServices : IItemsServices
     {
         private readonly IItemsRepository _itemsRepository;
+        private readonly IBasicDataRepository _basicDataRepository;
         private readonly IMapper _mapper;
 
-        public ItemsServices(IItemsRepository itemsRepository, IMapper mapper)
+        public ItemsServices(IItemsRepository itemsRepository, IBasicDataRepository basicDataRepository ,
+        IMapper mapper)
         {
             _itemsRepository = itemsRepository;
+            _basicDataRepository = basicDataRepository;
             _mapper = mapper;
         }
 
@@ -44,6 +48,11 @@ namespace PdaHub.Services.Items
               switch (discountType)
               {
                   case 101:
+                        foreach (var item in items)
+                      {
+                          var catModel = await _itemsRepository.GetItemSectionAsync(item.barcode);
+                          output.Items.Add(_mapper.MapPromoType101(item, catModel));
+                      }
                       break;
                   case 102:
                       foreach (var item in items)

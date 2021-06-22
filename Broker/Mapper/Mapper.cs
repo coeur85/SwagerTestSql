@@ -12,6 +12,7 @@ namespace PdaHub.Broker.Mapper
         public PromotionItemDetailsModel MapPromoType102(PosItemEnitityModel model, ItemSectionEnitiyModel catModel)
         {
             NamingModel modelName = ItemName(model);
+            NamingModel promoDiscription = DiscripPromo101(model);
             return new PromotionItemDetailsModel
             {
                 Header = MapHeader(model,catModel) ,
@@ -22,8 +23,8 @@ namespace PdaHub.Broker.Mapper
                     {
                         IsDivided = true,
                         DescriptionLineTwoDrowX = true,
-                        DescriptionLineOne = "بدلا من :",
-                        DescriptionLineTwo = model.sell_price.Value.ToString()
+                        DescriptionLineOne = promoDiscription.LineOne,
+                        DescriptionLineTwo = promoDiscription.LineTwo
                     }
 
                 },
