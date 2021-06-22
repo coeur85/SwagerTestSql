@@ -2,8 +2,8 @@
 {
     public record NamingModel
     {
-        public string ArabicName { get; set; }
-        public string EnglsihName { get; set; }
+        public string LineOne { get; set; }
+        public string LineTwo { get; set; }
     }
 }
 
