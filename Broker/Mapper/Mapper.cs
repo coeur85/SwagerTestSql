@@ -9,10 +9,6 @@ namespace PdaHub.Broker.Mapper
 {
     public partial class Mapper : IMapper
     {
-        private readonly IItemsRepository _itemsRepository;
-
-
-
         public PromotionItemDetailsModel MapPromoType102(PosItemEnitityModel model, ItemSectionEnitiyModel catModel)
         {
             NamingModel modelName = ItemName(model);
