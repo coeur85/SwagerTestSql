@@ -11,7 +11,7 @@ namespace PdaHub.Helpers
         private readonly ISqlDataAccess _dataAccess;
         private int BranchCode { get; set; }
 
-        public Helper(IConfiguration configuration , ISqlDataAccess dataAccess)
+        public Helper(IConfiguration configuration, ISqlDataAccess dataAccess)
         {
             _configuration = configuration;
             _dataAccess = dataAccess;
@@ -28,8 +28,8 @@ namespace PdaHub.Helpers
             => _configuration.GetSection("AuthSecret").Value;
         public async ValueTask<int> GetBranchCodeAsync()
         {
-            if(BranchCode == 0)
-                BranchCode= await _dataAccess.QuerySingleAsync<int>(BranchLocalDB(), "select setting  from sys_setup where parameter  = 'cbranch'");
+            if (BranchCode == 0)
+                BranchCode = await _dataAccess.QuerySingleAsync<int>(BranchLocalDB(), "select setting  from sys_setup where parameter  = 'cbranch'");
 
             return BranchCode;
         }

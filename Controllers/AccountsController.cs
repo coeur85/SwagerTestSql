@@ -13,7 +13,7 @@ namespace PdaHub.Controllers
 
     [ApiController]
     [Route("[controller]")]
-   
+
     public class AccountsController : PdaHubBaseContraoller
     {
         private readonly IAccountsServices _services;

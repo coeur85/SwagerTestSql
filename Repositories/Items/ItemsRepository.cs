@@ -47,7 +47,7 @@ namespace PdaHub.Repositories.Items
         public async Task<List<PosItemEnitityModel>> GetItemsInPromo(int DiscountNo)
         {
             var output = await _sqlData.QueryAsync<PosItemEnitityModel, dynamic>(_iHelper.BranchLocalDB(),
-                "select * from pos_items where discountno = @discountno", new { discountno =  DiscountNo });
+                "select * from pos_items where discountno = @discountno", new { discountno = DiscountNo });
             return output.ToList();
         }
     }

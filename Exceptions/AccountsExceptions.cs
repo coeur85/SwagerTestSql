@@ -14,7 +14,7 @@ namespace PdaHub.Exceptions
     public class InvalidLoginCredentialsExceptions : AccountsExceptions
     {
         public InvalidLoginCredentialsExceptions()
-            :base("Wrong password !")
+            : base("Wrong password !")
         {
 
         }

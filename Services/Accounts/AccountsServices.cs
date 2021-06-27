@@ -32,7 +32,8 @@ namespace PdaHub.Services.Accounts
                 return output;
             });
         public Task<SucessResponseModel<LoginSucessModel>> LoginAsync(LoginModel model)
-            => TryCatch(async () => {
+            => TryCatch(async () =>
+            {
                 var encPass = EncString(model.Password);
                 var accouut = await _repo.FindActiveAccountAsync(model.UserID, encPass);
                 ValidateLoginAccount(accouut);
@@ -41,7 +42,8 @@ namespace PdaHub.Services.Accounts
                 return new SucessResponseModel<LoginSucessModel> { Data = login };
             });
         public Task<SucessResponseModel<List<DocTypeModel>>> PermissionsAsync(ClaimsPrincipal User)
-           => TryCatch(async () => {
+           => TryCatch(async () =>
+           {
                int userid = Convert.ToInt32(User.FindFirst("Id").Value);
                var output = await _repo.GetUserPermissionsAsync(userid);
                return new SucessResponseModel<List<DocTypeModel>> { Data = output };

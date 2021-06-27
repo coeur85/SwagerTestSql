@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using PdaHub.Helpers;
 using Swashbuckle.AspNetCore.Filters;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace PdaHub
 {
@@ -32,12 +33,12 @@ namespace PdaHub
 
                 });
                 c.SchemaFilter<NSwageSchemaFilter>();
-                c.AddSecurityDefinition("oauth2", new  OpenApiSecurityScheme
+                c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
                     Description = "Standard Authorization header using the Bearer scheme. Example: \"bearer {token}\"",
                     In = ParameterLocation.Header,
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey 
+                    Type = SecuritySchemeType.ApiKey
                 });
 
                 c.OperationFilter<SecurityRequirementsOperationFilter>();
@@ -72,6 +73,7 @@ namespace PdaHub
             app.UseSwaggerUI(c =>
              {
                  c.SwaggerEndpoint("/swagger/v1/swagger.json", "bGomla API V1");
+                 c.DocExpansion(DocExpansion.None); // collapes docs
              });
 
         }

@@ -4,7 +4,7 @@ namespace PdaHub.Exceptions
 {
     public class ItemsExceptions : PdaHubExceptions
     {
-        
+
         public ItemsExceptions(string msg)
         {
             Messages.Add(new MessageDataModel { MessageType = MessageType.Error, MessageBody = msg });

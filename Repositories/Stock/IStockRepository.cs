@@ -1,5 +1,4 @@
-﻿using PdaHub.Models;
-using PdaHub.Models.Stock;
+﻿using PdaHub.Models.Stock;
 using System.Threading.Tasks;
 
 namespace PdaHub.Repositories.Stock

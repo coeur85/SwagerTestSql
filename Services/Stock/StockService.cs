@@ -3,8 +3,6 @@ using PdaHub.Helpers;
 using PdaHub.Models;
 using PdaHub.Models.Stock;
 using PdaHub.Repositories.Stock;
-using SimpleImpersonation;
-using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -42,7 +40,7 @@ namespace PdaHub.Services.Stock
                 }
                 var fileBytes = await SaveToExcelByteArrayAsync(data);
                 var filename = GenrateExcelFullFileName(data);
-               _runAs.RunAsAdminUser(async () => await SaveBytesToFileAsync(filename, fileBytes));
+                _runAs.RunAsAdminUser(async () => await SaveBytesToFileAsync(filename, fileBytes));
 
                 return new SucessResponseModel<StockInOutDetailModel>() { Data = data };
             });

@@ -3,7 +3,6 @@ using PdaHub.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace PdaHub.Services.Items
 {
@@ -50,7 +49,7 @@ namespace PdaHub.Services.Items
             if (model is null)
                 throw new ItemsExceptions("No items where found, please check your barcode");
         }
-       
+
 
         private void ValidatePromotion(int DiscountNo, List<PosItemEnitityModel> model)
         {
@@ -76,7 +75,7 @@ namespace PdaHub.Services.Items
 
             }
 
-            int[] acceptedPromoTypes = new int[] { 101 ,102 };
+            int[] acceptedPromoTypes = new int[] { 101, 102 };
             var allSupported = model.TrueForAll(x => x.discounttype.HasValue && acceptedPromoTypes.Any(y => y == x.discounttype.Value));
             if (!allSupported)
                 throw new PromotionsExceptions("only direct promotion are currently supported!");

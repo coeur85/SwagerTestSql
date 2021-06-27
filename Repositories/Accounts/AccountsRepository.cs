@@ -1,7 +1,6 @@
 ﻿using PdaHub.Broker.DataAccess;
 using PdaHub.Helpers;
 using PdaHub.Models.Accounts;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,7 +28,7 @@ namespace PdaHub.Repositories.Accounts
             return output.ToList();
         }
 
-        public async Task<AccountModel> FindActiveAccountAsync(int UserID,string Password)
+        public async Task<AccountModel> FindActiveAccountAsync(int UserID, string Password)
         {
             AccountModel output = await _dataAccess.QueryFirstOrDefaultAsync<AccountModel, dynamic>
                 (_helper.BranchLocalDB(), @"SELECT [userid] as [UserID],[a_name] as [ArabicTitle],[l_name] as [EnglishTitle] FROM [sys_login] 

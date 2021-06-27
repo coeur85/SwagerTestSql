@@ -37,7 +37,7 @@ namespace PdaHub
 
             services.AddSingleton<IAccountsServices, AccountsServices>();
             services.AddSingleton<IAccountsRepository, AccountsRepository>();
-           
+
         }
     }
 }
