@@ -1,4 +1,5 @@
 ﻿using PdaHub.Models;
+using System;
 using System.Text.RegularExpressions;
 
 namespace PdaHub.Broker.Mapper

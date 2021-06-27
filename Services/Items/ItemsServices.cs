@@ -2,6 +2,8 @@
 using PdaHub.Models;
 using PdaHub.Repositories.BasicData;
 using PdaHub.Repositories.Items;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -39,15 +41,25 @@ namespace PdaHub.Services.Items
         public Task<SucessResponseModel<PromotionItemsReponseModel>> GetPromotionItemsAsync(string Code)
           => TryCatch(async () =>
           {
-              var promoId =  ValidateGetSearchCode(Code);
-              List<PosItemEnitityModel> items = await _itemsRepository.GetItemsInPromo(promoId);
+              ValidateGetSearchCode(Code);
+              List<PosItemEnitityModel> items = new();
+              if (Code.Length <= 10)
+              {
+                  if (isIntgerSize(Code))
+                  {
+                      var promoId = Convert.ToInt32(Code);
+                      items  = await _itemsRepository.GetItemsInPromo(promoId);
+                  }
+              }
+
               if(items.Count ==0){
                   items.Add(await _itemsRepository.GetPosItemAsync(Code.Trim()));
               }
 
-              
-              ValidatePromotion(Code, items);
               int discountType = items.First().discounttype.Value;
+              int discountNo = items.First().discountno.Value;
+              ValidatePromotion(discountNo, items);
+             
               PromotionItemsReponseModel output = new();
               switch (discountType)
               {
