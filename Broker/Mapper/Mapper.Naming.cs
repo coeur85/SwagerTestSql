@@ -7,21 +7,21 @@ namespace PdaHub.Broker.Mapper
     {
         private NamingModel ItemName(PosItemEnitityModel dbModel)
         {
-            NamingModel output = new() { ArabicName = dbModel.a_name, EnglsihName = dbModel.l_name };
+            NamingModel output = new() { LineOne = dbModel.a_name, LineTwo = dbModel.l_name };
 
             if (HasArabicLetters(dbModel.l_name))
             {
-                output.EnglsihName = string.Empty;
-                output.ArabicName = output.ArabicName.Trim();
+                output.LineTwo = string.Empty;
+                output.LineOne = output.LineOne.Trim();
             }
 
-            if (string.IsNullOrEmpty(output.EnglsihName))
+            if (string.IsNullOrEmpty(output.LineTwo))
             {
-                if (output.ArabicName.Length >= 45)
+                if (output.LineOne.Length >= 45)
                 {
-                    var words = SplitLines(output.ArabicName);
-                    output.ArabicName = words[0];
-                    output.EnglsihName = words[1];
+                    var words = SplitLines(output.LineOne);
+                    output.LineOne = words[0];
+                    output.LineTwo = words[1];
                 }
             }
 
@@ -60,5 +60,50 @@ namespace PdaHub.Broker.Mapper
             Regex regex = new Regex("[\u0600-\u06ff]|[\u0750-\u077f]|[\ufb50-\ufc3f]|[\ufe70-\ufefc]");
             return regex.IsMatch(text);
         }
+    
+        private NamingModel DiscripPromo101(PosItemEnitityModel model){
+
+            NamingModel output = new();
+            decimal discountPercent = model.discountvalue.Value;
+            decimal orginalPricePercent = 100 - discountPercent;
+            double discountAmount = Convert.ToDouble(discountPercent / orginalPricePercent);
+            switch (discountAmount)
+            {
+                case 1:
+                    output.LineOne = UniteName(model.barcode)+ " + ";;
+                    output.LineTwo = UniteName(model.barcode) +" هدية ";
+                   
+                    break;
+                case <= 0.5 and >= 0.49  :
+                    output.LineOne = UniteName(model.barcode)+ " + ";
+                    output.LineTwo = "نصف هدية";
+                    break;
+
+                case 0.25 :
+                    output.LineOne = UniteName(model.barcode)+ " + ";
+                    output.LineTwo = "ربع هدية";
+                    break;
+                default:
+                    output.LineOne = "خصم ";
+                    output.LineTwo = $"{discountAmount}%";
+                    break;
+            }
+
+
+
+            return output;
+        }
+
+        private string UniteName(string barcode){
+            if(barcode.Trim().StartsWith("23"))
+            {
+                return "كيلو";
+            }
+            else{
+                return "قطعة";
+            }
+
+        }
+    
     }
 }

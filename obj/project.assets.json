@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net5.0": {
-      "Dapper/2.0.78": {
+      "Dapper/2.0.90": {
         "type": "package",
         "compile": {
           "lib/net5.0/Dapper.dll": {}
@@ -1648,14 +1648,15 @@
     }
   },
   "libraries": {
-    "Dapper/2.0.78": {
-      "sha512": "vLPwL2HZXp/DN17Eu7sg6GMEj02alq7jcy6atn5Gv8i96b9Hu1UoxlCrhInUPfSFLQQiD8O7pdWAE1fdUEO/1Q==",
+    "Dapper/2.0.90": {
+      "sha512": "e4YjOLJptnpwHIbP8HxjaYf7So9lhUC43rvvGMEkH4Q4CiVlm4rOxYDo0HyuHlMQKj0U5Ob/nCMm52TUhTaZQg==",
       "type": "package",
-      "path": "dapper/2.0.78",
+      "path": "dapper/2.0.90",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "dapper.2.0.78.nupkg.sha512",
+        "Dapper.png",
+        "dapper.2.0.90.nupkg.sha512",
         "dapper.nuspec",
         "lib/net461/Dapper.dll",
         "lib/net461/Dapper.xml",
@@ -3475,7 +3476,7 @@
       ]
     },
     "System.Globalization/4.3.0": {
-      "sha512": "kYdVd2f2PAdFGblzFswE4hkNANJBKRmsfa2X5LG2AcWE1c7/4t0pYae1L8vfZ5xvE2nK/R9JprtToA61OSHWIg==",
+      "sha512": "gj0rowjLBztAoxRuzM0Nn9exYVrD+++xb3PYc+QR/YHDvch98gbT3H4vFMnNU6r8poSjVwwlRxKAqtqN6AXs4g==",
       "type": "package",
       "path": "system.globalization/4.3.0",
       "files": [
@@ -3639,7 +3640,7 @@
       ]
     },
     "System.IO/4.3.0": {
-      "sha512": "3qjaHvxQPDpSOYICjUoTsmoq5u6QJAFRUITgeT/4gqkF1bajbSmb1kwSxEA8AHlofqgcKJcM8udgieRNhaJ5Cg==",
+      "sha512": "v8paIePhmGuXZbE9xvvNb4uJ5ME4OFXR1+8la/G/L1GIl2nbU2WFnddgb79kVK3U2us7q1aZT/uY/R0D/ovB5g==",
       "type": "package",
       "path": "system.io/4.3.0",
       "files": [
@@ -3869,7 +3870,7 @@
       ]
     },
     "System.Reflection/4.3.0": {
-      "sha512": "KMiAFoW7MfJGa9nDFNcfu+FpEdiHpWgTcS2HdMpDvt9saK3y/G4GwprPyzqjFH9NTaGPQeWNHU+iDlDILj96aQ==",
+      "sha512": "IyW2ftYNzgMCgHBk8lQiy+G3+ydbU5tE+6PEqM5JJvIdeFKaXDSzHAPYDREPe6zpr5WJ1Fcma+rAFCIAV6+DMw==",
       "type": "package",
       "path": "system.reflection/4.3.0",
       "files": [
@@ -4007,7 +4008,7 @@
       ]
     },
     "System.Reflection.Primitives/4.3.0": {
-      "sha512": "5RXItQz5As4xN2/YUDxdpsEkMhvw3e6aNveFXUn4Hl/udNTCNhnKp8lT9fnc3MhvGKh1baak5CovpuQUXHAlIA==",
+      "sha512": "1LnMkF9aXKuQAgYzjoiQaL9mwY7oY6KdaO/zzeLMynNBEqKoUfLi5TiKIewoAF+hkxfGTZsjkjsF1jRL4uSeqg==",
       "type": "package",
       "path": "system.reflection.primitives/4.3.0",
       "files": [
@@ -5522,7 +5523,7 @@
       ]
     },
     "System.Threading.Tasks/4.3.0": {
-      "sha512": "LbSxKEdOUhVe8BezB/9uOGGppt+nZf6e1VFyw6v3DN6lqitm0OSn2uXMOdtP0M3W4iMcqcivm2J6UgqiwwnXiA==",
+      "sha512": "fUiP+CyyCjs872OA8trl6p97qma/da1xGq3h4zAbJZk8zyaU4zyEfqW5vbkP80xG/Nimun1vlWBboMEk7XxdEw==",
       "type": "package",
       "path": "system.threading.tasks/4.3.0",
       "files": [
@@ -5739,7 +5740,7 @@
       ]
     },
     "System.Xml.XPath/4.3.0": {
-      "sha512": "v1JQ5SETnQusqmS3RwStF7vwQ3L02imIzl++sewmt23VGygix04pEH+FCj1yWb+z4GDzKiljr1W7Wfvrx0YwgA==",
+      "sha512": "8Eo7vuasWRqXfiBRCIKz20Rq1h6n+NMp6nW2RmyUwF4VDekg8xbRZu8S3N21P5XGAhv+kaqUwI3xydEkcw+D5w==",
       "type": "package",
       "path": "system.xml.xpath/4.3.0",
       "files": [
@@ -5818,7 +5819,7 @@
   },
   "projectFileDependencyGroups": {
     "net5.0": [
-      "Dapper >= 2.0.78",
+      "Dapper >= 2.0.90",
       "EPPlus >= 5.5.5",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 5.0.6",
       "Microsoft.Data.SqlClient >= 2.1.1",
@@ -5830,26 +5831,28 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ahmed.magdi\\.nuget\\packages\\": {}
+    "/Users/magdi/.nuget/packages/": {},
+    "/usr/local/share/dotnet/sdk/NuGetFallbackFolder": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ahmed.magdi\\source\\repos\\bGomlaPda\\PdaHub.csproj",
+      "projectUniqueName": "/Users/magdi/Documents/repo/bGomlaPda/PdaHub.csproj",
       "projectName": "PdaHub",
-      "projectPath": "C:\\Users\\ahmed.magdi\\source\\repos\\bGomlaPda\\PdaHub.csproj",
-      "packagesPath": "C:\\Users\\ahmed.magdi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ahmed.magdi\\source\\repos\\bGomlaPda\\obj\\",
+      "projectPath": "/Users/magdi/Documents/repo/bGomlaPda/PdaHub.csproj",
+      "packagesPath": "/Users/magdi/.nuget/packages/",
+      "outputPath": "/Users/magdi/Documents/repo/bGomlaPda/obj/",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+      ],
       "configFilePaths": [
-        "C:\\Users\\ahmed.magdi\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/Users/magdi/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net5.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -5870,7 +5873,7 @@
         "dependencies": {
           "Dapper": {
             "target": "Package",
-            "version": "[2.0.78, )"
+            "version": "[2.0.90, )"
           },
           "EPPlus": {
             "target": "Package",
@@ -5923,7 +5926,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.204\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.301/RuntimeIdentifierGraph.json"
       }
     }
   }

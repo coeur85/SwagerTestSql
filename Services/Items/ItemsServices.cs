@@ -1,5 +1,6 @@
 ﻿using PdaHub.Broker.Mapper;
 using PdaHub.Models;
+using PdaHub.Repositories.BasicData;
 using PdaHub.Repositories.Items;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,11 +10,14 @@ namespace PdaHub.Services.Items
     public partial class ItemsServices : IItemsServices
     {
         private readonly IItemsRepository _itemsRepository;
+        private readonly IBasicDataRepository _basicDataRepository;
         private readonly IMapper _mapper;
 
-        public ItemsServices(IItemsRepository itemsRepository, IMapper mapper)
+        public ItemsServices(IItemsRepository itemsRepository, IBasicDataRepository basicDataRepository ,
+        IMapper mapper)
         {
             _itemsRepository = itemsRepository;
+            _basicDataRepository = basicDataRepository;
             _mapper = mapper;
         }
 
@@ -32,17 +36,27 @@ namespace PdaHub.Services.Items
                     $"-{dbModel.last_modified_time.ToShortTimeString()}", MessageType.Information);
                 return output;
             });
-        public Task<SucessResponseModel<PromotionItemsReponseModel>> GetPromotionItemsAsync(int DiscountNo)
+        public Task<SucessResponseModel<PromotionItemsReponseModel>> GetPromotionItemsAsync(string Code)
           => TryCatch(async () =>
           {
+              var promoId =  ValidateGetSearchCode(Code);
+              List<PosItemEnitityModel> items = await _itemsRepository.GetItemsInPromo(promoId);
+              if(items.Count ==0){
+                  items.Add(await _itemsRepository.GetPosItemAsync(Code.Trim()));
+              }
 
-              var items = await _itemsRepository.GetItemsInPromo(DiscountNo);
-              ValidatePromotion(DiscountNo, items);
+              
+              ValidatePromotion(Code, items);
               int discountType = items.First().discounttype.Value;
               PromotionItemsReponseModel output = new();
               switch (discountType)
               {
                   case 101:
+                        foreach (var item in items)
+                      {
+                          var catModel = await _itemsRepository.GetItemSectionAsync(item.barcode);
+                          output.Items.Add(_mapper.MapPromoType101(item, catModel));
+                      }
                       break;
                   case 102:
                       foreach (var item in items)
