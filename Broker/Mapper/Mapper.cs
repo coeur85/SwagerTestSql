@@ -17,7 +17,7 @@ namespace PdaHub.Broker.Mapper
                     DescriptionArea = new Descriptionarea
                     {
                         IsDivided = true,
-                        DescriptionLineTwoDrowX = true,
+                        DescriptionLineTwoDrawX = true,
                         DescriptionLineOne = "بدلا من :",
                         DescriptionLineTwo = model.sell_price.Value.ToString()
                     }
@@ -42,7 +42,7 @@ namespace PdaHub.Broker.Mapper
                     DescriptionArea = new Descriptionarea
                     {
                         IsDivided = false,
-                        DescriptionLineTwoDrowX = false,
+                        DescriptionLineTwoDrawX = false,
                         DescriptionLineOne = discripPromo.LineOne,
                         DescriptionLineTwo = discripPromo.LineTwo
                     }
@@ -89,7 +89,7 @@ namespace PdaHub.Broker.Mapper
                     PromotionNumber = model.discountno.Value,
                     PromotionExpireDate = model.date_to.Value.ToShortDateString(),
                     PrintDate = DateTime.Now.ToShortDateString(),
-                    DrowDescriptionCenterAsBarcode = true,
+                    DrawDescriptionCenterAsBarcode = true,
                     DescriptionCenter = model.barcode.Trim(),
                     DescriptionRight = model.barcode.Trim()
                 };

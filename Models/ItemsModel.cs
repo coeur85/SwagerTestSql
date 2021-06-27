@@ -91,7 +91,7 @@ namespace PdaHub.Models
     public record Descriptionarea
     {
         public bool IsDivided { get; set; }
-        public bool DescriptionLineTwoDrowX { get; set; }
+        public bool DescriptionLineTwoDrawX { get; set; }
         public string DescriptionLineOne { get; set; }
         public string DescriptionLineTwo { get; set; }
     }
@@ -102,7 +102,7 @@ namespace PdaHub.Models
         public string PrintDate { get; set; }
         public int PromotionNumber { get; set; }
         public string PromotionExpireDate { get; set; }
-        public bool DrowDescriptionCenterAsBarcode { get; set; }
+        public bool DrawDescriptionCenterAsBarcode { get; set; }
     }
 
     public record PromotionItemsReponseModel
