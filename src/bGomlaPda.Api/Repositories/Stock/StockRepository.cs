@@ -1,4 +1,4 @@
-﻿using PdaHub.Models.Stock;
+﻿using PdaHub.Api.Models.Stock;
 using PdaHub.Repositories.Stock.Order;
 using PdaHub.Repositories.Stock.OrderItems;
 using System.Threading.Tasks;

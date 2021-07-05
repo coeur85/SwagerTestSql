@@ -1,4 +1,4 @@
-﻿using PdaHub.Models;
+﻿using PdaHub.Api.Models.Response;
 
 namespace PdaHub.Exceptions
 {

@@ -1,4 +1,4 @@
-﻿using PdaHub.Models;
+﻿using PdaHub.Models.Item;
 
 namespace PdaHub.Broker.Mapper
 {

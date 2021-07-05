@@ -1,5 +1,5 @@
-﻿using PdaHub.Models;
-using PdaHub.Models.Stock;
+﻿using PdaHub.Api.Models.Response;
+using PdaHub.Api.Models.Stock;
 using System;
 using System.Threading.Tasks;
 

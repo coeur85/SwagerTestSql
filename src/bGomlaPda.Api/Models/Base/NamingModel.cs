@@ -1,4 +1,4 @@
-﻿namespace PdaHub.Models
+﻿namespace PdaHub.Api.Models.Base
 {
     public record NamingModel
     {

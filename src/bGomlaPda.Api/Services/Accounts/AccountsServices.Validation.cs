@@ -1,5 +1,5 @@
-﻿using PdaHub.Exceptions;
-using PdaHub.Models.Accounts;
+﻿using PdaHub.Api.Models.Account;
+using PdaHub.Exceptions;
 
 namespace PdaHub.Services.Accounts
 {

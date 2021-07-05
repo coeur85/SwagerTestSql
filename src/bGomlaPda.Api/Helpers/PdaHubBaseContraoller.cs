@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PdaHub.Api.Models.Response;
 using PdaHub.Exceptions;
-using PdaHub.Models;
 using System.Threading.Tasks;
 
 namespace PdaHub.Helpers

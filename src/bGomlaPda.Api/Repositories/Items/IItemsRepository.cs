@@ -1,4 +1,4 @@
-﻿using PdaHub.Models;
+﻿using PdaHub.Models.Item;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

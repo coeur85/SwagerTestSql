@@ -1,5 +1,5 @@
-﻿using PdaHub.Broker.DataAccess;
-using PdaHub.Models.Stock;
+﻿using PdaHub.Api.Models.Stock;
+using PdaHub.Broker.DataAccess;
 using PdaHub.Repositories.BasicData;
 using System.Collections.Generic;
 using System.Linq;

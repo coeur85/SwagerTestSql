@@ -1,5 +1,6 @@
-﻿using PdaHub.Broker.Mapper;
-using PdaHub.Models;
+﻿using PdaHub.Api.Models.Response;
+using PdaHub.Broker.Mapper;
+using PdaHub.Models.Item;
 using PdaHub.Repositories.BasicData;
 using PdaHub.Repositories.Items;
 using System;

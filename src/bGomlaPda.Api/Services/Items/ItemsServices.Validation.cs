@@ -1,5 +1,5 @@
 ﻿using PdaHub.Exceptions;
-using PdaHub.Models;
+using PdaHub.Models.Item;
 using System;
 using System.Collections.Generic;
 using System.Linq;

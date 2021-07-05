@@ -1,7 +1,7 @@
-﻿using PdaHub.Broker.RunAs;
+﻿using PdaHub.Api.Models.Response;
+using PdaHub.Api.Models.Stock;
+using PdaHub.Broker.RunAs;
 using PdaHub.Helpers;
-using PdaHub.Models;
-using PdaHub.Models.Stock;
 using PdaHub.Repositories.Stock;
 using System.IO;
 using System.Threading.Tasks;

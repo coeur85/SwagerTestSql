@@ -1,4 +1,4 @@
-﻿using PdaHub.Models;
+﻿using PdaHub.Api.Models.Response;
 using System;
 using System.Collections.Generic;
 

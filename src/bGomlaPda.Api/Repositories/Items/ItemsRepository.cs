@@ -1,6 +1,6 @@
 ﻿using PdaHub.Broker.DataAccess;
 using PdaHub.Helpers;
-using PdaHub.Models;
+using PdaHub.Models.Item;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

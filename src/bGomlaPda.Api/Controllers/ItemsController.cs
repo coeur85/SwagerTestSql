@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PdaHub.Api.Models.Response;
 using PdaHub.Helpers;
-using PdaHub.Models;
+using PdaHub.Models.Item;
 using PdaHub.Services.Items;
 using System.Net;
 using System.Threading.Tasks;

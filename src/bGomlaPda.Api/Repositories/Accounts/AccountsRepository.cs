@@ -1,4 +1,5 @@
-﻿using PdaHub.Broker.DataAccess;
+﻿using PdaHub.Api.Models.Account;
+using PdaHub.Broker.DataAccess;
 using PdaHub.Helpers;
 using PdaHub.Models.Accounts;
 using System.Collections.Generic;

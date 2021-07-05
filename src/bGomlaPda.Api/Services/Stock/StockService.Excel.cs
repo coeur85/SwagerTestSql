@@ -1,6 +1,6 @@
 ﻿using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using PdaHub.Models.Stock;
+using PdaHub.Api.Models.Stock;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;

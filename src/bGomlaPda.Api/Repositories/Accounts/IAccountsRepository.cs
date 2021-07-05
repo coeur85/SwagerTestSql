@@ -1,4 +1,5 @@
-﻿using PdaHub.Models.Accounts;
+﻿using PdaHub.Api.Models.Account;
+using PdaHub.Models.Accounts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

@@ -1,4 +1,5 @@
-﻿using PdaHub.Models;
+﻿using PdaHub.Api.Models.Response;
+using PdaHub.Models.Item;
 using System.Threading.Tasks;
 
 namespace PdaHub.Services.Items
