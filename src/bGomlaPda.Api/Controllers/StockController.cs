@@ -12,7 +12,7 @@ namespace PdaHub.Controllers
     [ApiController]
     [Route("[controller]")]
     [AllowAnonymous]
-    [ApiExplorerSettings(IgnoreApi = true)]
+   /// [ApiExplorerSettings(IgnoreApi = true)]
     public class StockController : PdaHubBaseContraoller
     {
         private readonly IStockService _stockService;

@@ -22,8 +22,10 @@ namespace PdaHub.Repositories.Stock
         public async Task<StockDetailModel> GetOrderDetailAsync(StockReviewModel model, string connectionString)
         {
             StockDetailModel output = new StockDetailModel();
-            output.StockOrder = await _stockOrde.GetOrder(model, connectionString);
-            output.StockOrderItems = await _stockOrderItems.GetOrderItems(model, connectionString);
+            output.StockOrder = await _stockOrde.GetOrderAsync(model, connectionString);
+            if (output.StockOrder is null)
+                return null;
+            output.StockOrderItems = await _stockOrderItems.GetOrderItemsAsync(model, connectionString);
             return output;
 
         }

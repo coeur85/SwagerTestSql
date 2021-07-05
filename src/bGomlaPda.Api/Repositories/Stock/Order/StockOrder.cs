@@ -16,13 +16,13 @@ namespace PdaHub.Repositories.Stock.Order
             _basicData = basicData;
         }
 
-        public async Task<StockOrderModel> GetOrder(StockReviewModel model, string connectionString)
+        public async Task<StockOrderModel> GetOrderAsync(StockReviewModel model, string connectionString)
         {
 
             StockOrderModel stockOrder = await _dataAccess.QueryFirstOrDefaultAsync<StockOrderModel, dynamic>
                 (connectionString, "select o.branch, o.sites,o.orderno, o.orderdate, o.invoiceno, o.invoicedate, o.doctype" +
-              " from stk_order o" +
-              "where orderno = @orderno and orderdate = @orderdate and branch = @BranchCode and doctype = @DocType", model);
+              " from stk_order o " +
+              "where o.orderno = @orderno and o.orderdate = @orderdate and o.branch = @BranchCode and o.doctype = @DocType", model);
 
             if (stockOrder is not null)
             {

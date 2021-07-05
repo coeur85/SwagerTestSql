@@ -19,7 +19,7 @@ namespace PdaHub.Repositories.Stock.OrderItems
         }
 
 
-        public async Task<List<StockOrderItemsModel>> GetOrderItems(StockReviewModel model, string connectionString)
+        public async Task<List<StockOrderItemsModel>> GetOrderItemsAsync(StockReviewModel model, string connectionString)
         {
             var output = await _dataAccess.QueryAsync<StockOrderItemsModel, dynamic>(connectionString,
                 "select itemean,trim(barcode) as [barcode] ,unit,actual_qty,free_qty from stk_order_items " +

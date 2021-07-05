@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\bGomlaPda\src\bGomlaPda.Api\PdaHub.Api.csproj" />
+    <ProjectReference Include="..\bGomlaPda.Api\PdaHub.Api.csproj" />
   </ItemGroup>
 
 </Project>

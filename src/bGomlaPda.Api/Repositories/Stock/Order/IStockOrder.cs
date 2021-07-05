@@ -5,6 +5,6 @@ namespace PdaHub.Repositories.Stock.Order
 {
     public interface IStockOrder
     {
-        Task<StockOrderModel> GetOrder(StockReviewModel model, string connectionString);
+        Task<StockOrderModel> GetOrderAsync(StockReviewModel model, string connectionString);
     }
 }
