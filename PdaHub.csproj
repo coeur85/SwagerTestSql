@@ -2,19 +2,22 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>4792f7d1-d715-4773-a347-92dfe9689c60</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.0.90"/>
-    <PackageReference Include="EPPlus" Version="5.5.5"/>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.6"/>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.1"/>
-    <PackageReference Include="SimpleImpersonation" Version="3.0.0"/>
-    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.2"/>
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.0.7"/>
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.0.7"/>
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="6.0.7"/>
+    <PackageReference Include="Dapper" Version="2.0.90" />
+    <PackageReference Include="EPPlus" Version="5.5.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.6" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
+    <PackageReference Include="SimpleImpersonation" Version="3.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.0.7" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.0.7" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="6.0.7" />
   </ItemGroup>
 </Project>
