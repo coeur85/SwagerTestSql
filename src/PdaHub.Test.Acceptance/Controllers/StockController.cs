@@ -32,9 +32,8 @@ namespace PdaHub.Test.Acceptance.Controllers
             // then
             outputString.Should().BeEquivalentTo(excpectedString);
         }
-
         [Fact]
-        public async Task ShouldReturnSuccessResponseModel()
+        public async Task ShouldReturnSuccessResponseModelWithOrderInOnlyAsync()
         {
             // given
             DateTime orderDate = new DateTime(2019, 12, 11);
@@ -60,9 +59,54 @@ namespace PdaHub.Test.Acceptance.Controllers
             responseModel.Data.StockOrderIn.StockOrder.DocType.Should().Be(expectedModel.DocType);
             responseModel.Data.StockOrderIn.StockOrder.Orderno.Should().Be(expectedModel.Orderno);
             responseModel.Data.StockOrderIn.StockOrder.Orderdate.Should().Be(expectedModel.Orderdate);
+            responseModel.Data.StockOrderOut.Should().BeNull();
 
 
         }
+        [Fact]
+        public async Task ShouldReturnSuccessResponseModelWithOrderInAndOutAsync()
+        {
+            // given
+            DateTime orderInDate = new DateTime(2021, 3, 14);
+            DateTime orderOutDate = new DateTime(2021, 3, 6);
+            int branchInCode = 601;
+            int branchOutCode = 607;
+            int orderNo = 261;
+            StockReviewModel modelToPost = new StockReviewModel
+            { BranchCode = branchInCode, DocType = 2012, OrderNo = orderNo, OrderDate = orderInDate };
+            StockOrderModel expectedOrderInModel = new();
+            expectedOrderInModel.Branch = branchInCode;
+            expectedOrderInModel.DocType = 2012;
+            expectedOrderInModel.Orderno = orderNo;
+            expectedOrderInModel.Orderdate = orderInDate;
 
+            StockOrderModel expectedOrderOutModel = new();
+            expectedOrderOutModel.Branch = branchOutCode;
+            expectedOrderOutModel.DocType = 5052;
+            expectedOrderOutModel.Invoiceno = orderNo;
+            expectedOrderOutModel.Invoicedate = orderInDate;
+            expectedOrderOutModel.Sites = branchInCode;
+            expectedOrderOutModel.Orderno = 6;
+            expectedOrderOutModel.Orderdate = orderOutDate;
+
+            // when
+            SucessResponseModel<StockInOutDetailModel> responseModel =
+                await _api.PostAsync<SucessResponseModel<StockInOutDetailModel>, StockReviewModel>(relevantUrl, modelToPost);
+
+            // then
+            responseModel.Succsess.Should().BeTrue();
+            responseModel.Messages.Count.Should().Be(0);
+            responseModel.Data.StockOrderIn.StockOrderItems.Count.Should().BeGreaterOrEqualTo(1);
+            responseModel.Data.StockOrderIn.StockOrder.Branch.Should().Be(expectedOrderInModel.Branch);
+            responseModel.Data.StockOrderIn.StockOrder.DocType.Should().Be(expectedOrderInModel.DocType);
+            responseModel.Data.StockOrderIn.StockOrder.Orderno.Should().Be(expectedOrderInModel.Orderno);
+            responseModel.Data.StockOrderIn.StockOrder.Orderdate.Should().Be(expectedOrderInModel.Orderdate);
+            responseModel.Data.StockOrderOut.Should().NotBeNull();
+
+          //  responseModel.Data.StockOrderOut.StockOrder.Invoiceno.Should().Be()
+
+
+
+        }
     }
 }
