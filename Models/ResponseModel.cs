@@ -24,9 +24,6 @@ namespace PdaHub.Models
 
     }
 
-
-
-
     public record ErrorResponseModel : ResponseModel
     {
         public ErrorResponseModel()
@@ -53,7 +50,6 @@ namespace PdaHub.Models
         }
 
     }
-
 
 
     public record MessageDataModel
