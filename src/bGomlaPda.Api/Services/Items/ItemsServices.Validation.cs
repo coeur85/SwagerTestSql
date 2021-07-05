@@ -80,13 +80,14 @@ namespace PdaHub.Services.Items
 
 
 
-        }   
-        private void ValidateGetSearchCode(string Code){
-           
-                bool resrult = Code.All(c => c >= '0' && c <= '9');
-                if(!resrult)
-                    throw new PromotionsExceptions("invalied search code !");
-           
+        }
+        private void ValidateGetSearchCode(string Code)
+        {
+
+            bool resrult = Code.All(c => c >= '0' && c <= '9');
+            if (!resrult)
+                throw new PromotionsExceptions("invalied search code !");
+
         }
 
         private bool isIntgerSize(string value)

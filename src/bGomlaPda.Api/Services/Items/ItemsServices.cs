@@ -16,7 +16,7 @@ namespace PdaHub.Services.Items
         private readonly IBasicDataRepository _basicDataRepository;
         private readonly IMapper _mapper;
 
-        public ItemsServices(IItemsRepository itemsRepository, IBasicDataRepository basicDataRepository ,
+        public ItemsServices(IItemsRepository itemsRepository, IBasicDataRepository basicDataRepository,
         IMapper mapper)
         {
             _itemsRepository = itemsRepository;
@@ -49,23 +49,24 @@ namespace PdaHub.Services.Items
                   if (isIntgerSize(Code))
                   {
                       var promoId = Convert.ToInt32(Code);
-                      items  = await _itemsRepository.GetItemsInPromo(promoId);
+                      items = await _itemsRepository.GetItemsInPromo(promoId);
                   }
               }
 
-              if(items.Count ==0){
+              if (items.Count == 0)
+              {
                   items.Add(await _itemsRepository.GetPosItemAsync(Code.Trim()));
               }
 
               int discountType = items.First().discounttype.Value;
               int discountNo = items.First().discountno.Value;
               ValidatePromotion(discountNo, items);
-             
+
               PromotionItemsReponseModel output = new();
               switch (discountType)
               {
                   case 101:
-                        foreach (var item in items)
+                      foreach (var item in items)
                       {
                           var catModel = await _itemsRepository.GetItemSectionAsync(item.barcode);
                           output.Items.Add(_mapper.MapPromoType101(item, catModel));

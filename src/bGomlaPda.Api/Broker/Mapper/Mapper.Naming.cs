@@ -62,8 +62,9 @@ namespace PdaHub.Broker.Mapper
             Regex regex = new Regex("[\u0600-\u06ff]|[\u0750-\u077f]|[\ufb50-\ufc3f]|[\ufe70-\ufefc]");
             return regex.IsMatch(text);
         }
-    
-        private NamingModel DiscripPromo101(PosItemEnitityModel model){
+
+        private NamingModel DiscripPromo101(PosItemEnitityModel model)
+        {
 
             NamingModel output = new();
             decimal discountPercent = model.discountvalue.Value;
@@ -72,17 +73,17 @@ namespace PdaHub.Broker.Mapper
             switch (discountAmount)
             {
                 case 1:
-                    output.LineOne = UniteName(model.barcode)+ " + ";;
-                    output.LineTwo = UniteName(model.barcode) +" هدية ";
-                   
+                    output.LineOne = UniteName(model.barcode) + " + "; ;
+                    output.LineTwo = UniteName(model.barcode) + " هدية ";
+
                     break;
-                case <= 0.5 and >= 0.49  :
-                    output.LineOne = UniteName(model.barcode)+ " + ";
+                case <= 0.5 and >= 0.49:
+                    output.LineOne = UniteName(model.barcode) + " + ";
                     output.LineTwo = "نصف هدية";
                     break;
 
-                case 0.25 :
-                    output.LineOne = UniteName(model.barcode)+ " + ";
+                case 0.25:
+                    output.LineOne = UniteName(model.barcode) + " + ";
                     output.LineTwo = "ربع هدية";
                     break;
                 default:
@@ -96,16 +97,18 @@ namespace PdaHub.Broker.Mapper
             return output;
         }
 
-        private string UniteName(string barcode){
-            if(barcode.Trim().StartsWith("23"))
+        private string UniteName(string barcode)
+        {
+            if (barcode.Trim().StartsWith("23"))
             {
                 return "كيلو";
             }
-            else{
+            else
+            {
                 return "قطعة";
             }
 
         }
-    
+
     }
 }

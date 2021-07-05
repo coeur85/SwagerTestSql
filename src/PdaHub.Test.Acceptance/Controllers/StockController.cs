@@ -32,7 +32,7 @@ namespace PdaHub.Test.Acceptance.Controllers
             // then
             outputString.Should().BeEquivalentTo(excpectedString);
         }
-    
+
         [Fact]
         public async Task ShouldReturnSuccessResponseModel()
         {
@@ -40,7 +40,7 @@ namespace PdaHub.Test.Acceptance.Controllers
             DateTime orderDate = new DateTime(2019, 12, 11);
             int branchCode = 601;
             int orderNo = 15;
-            StockReviewModel modelToPost = new StockReviewModel 
+            StockReviewModel modelToPost = new StockReviewModel
             { BranchCode = branchCode, DocType = 2012, OrderNo = orderNo, OrderDate = orderDate };
             StockOrderModel expectedModel = new();
             expectedModel.Branch = branchCode;
@@ -50,7 +50,7 @@ namespace PdaHub.Test.Acceptance.Controllers
 
             // when
             SucessResponseModel<StockInOutDetailModel> responseModel =
-                await _api.PostAsync<SucessResponseModel<StockInOutDetailModel>,StockReviewModel>(relevantUrl, modelToPost);
+                await _api.PostAsync<SucessResponseModel<StockInOutDetailModel>, StockReviewModel>(relevantUrl, modelToPost);
 
             // then
             responseModel.Succsess.Should().BeTrue();
@@ -63,6 +63,6 @@ namespace PdaHub.Test.Acceptance.Controllers
 
 
         }
-    
+
     }
 }

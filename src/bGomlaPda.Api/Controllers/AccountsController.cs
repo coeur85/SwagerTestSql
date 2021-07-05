@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using PdaHub.Api.Models.Account;
 using PdaHub.Api.Models.Response;
 using PdaHub.Helpers;
-using PdaHub.Models.Accounts;
 using PdaHub.Services.Accounts;
 using System.Collections.Generic;
 using System.Threading.Tasks;

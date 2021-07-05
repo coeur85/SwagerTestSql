@@ -2,7 +2,6 @@
 using PdaHub.Api.Models.Account;
 using PdaHub.Api.Models.Response;
 using PdaHub.Helpers;
-using PdaHub.Models.Accounts;
 using PdaHub.Repositories.Accounts;
 using System;
 using System.Collections.Generic;

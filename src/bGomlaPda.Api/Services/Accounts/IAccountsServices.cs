@@ -1,6 +1,5 @@
 ﻿using PdaHub.Api.Models.Account;
 using PdaHub.Api.Models.Response;
-using PdaHub.Models.Accounts;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;

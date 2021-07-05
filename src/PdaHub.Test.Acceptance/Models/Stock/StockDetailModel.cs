@@ -7,5 +7,5 @@ namespace PdaHub.Test.Acceptance.Models.Stock
         public StockOrderModel StockOrder { get; set; }
         public List<StockOrderItemsModel> StockOrderItems { get; set; } = new List<StockOrderItemsModel>();
     }
-   
+
 }
