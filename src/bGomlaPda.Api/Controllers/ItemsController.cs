@@ -34,7 +34,7 @@ namespace PdaHub.Controllers
 
 
         [HttpGet("Promotion/{SearchCode}")]
-        [ProducesResponseType(typeof(SucessResponseModel<ItemDetailsResponseModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(SucessResponseModel<PromotionItemsReponseModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponseModel), (int)HttpStatusCode.BadRequest)]
         public Task<ActionResult<SucessResponseModel<PromotionItemsReponseModel>>> GetPromotionItmesAsync(string SearchCode)
             => TryCatch<PromotionItemsReponseModel>(async () =>

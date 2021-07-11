@@ -13,13 +13,18 @@ namespace PdaHub.Broker.Mapper
                 Header = MapHeader(model, catModel),
                 Body = new Body
                 {
-                    Price = model.sell_price.Value - model.discountvalue.Value,
+                   
                     DescriptionArea = new Descriptionarea
                     {
                         IsDivided = true,
                         DescriptionLineTwoDrawX = true,
                         DescriptionLineOne = "بدلا من :",
                         DescriptionLineTwo = model.sell_price.Value.ToString(),
+                      
+                    },
+                    PriceArea = new PriceArea
+                    {
+                        Price = model.sell_price.Value - model.discountvalue.Value,
                         ShowtSideBarcode = true,
                         SideBarcodeValue = model.barcode.Trim()
                     }
@@ -40,13 +45,18 @@ namespace PdaHub.Broker.Mapper
                 Header = MapHeader(model, catModel),
                 Body = new Body
                 {
-                    Price = model.sell_price.Value,
+                   
                     DescriptionArea = new Descriptionarea
                     {
                         IsDivided = false,
                         DescriptionLineTwoDrawX = false,
                         DescriptionLineOne = discripPromo.LineOne,
-                        DescriptionLineTwo = discripPromo.LineTwo,
+                        DescriptionLineTwo = discripPromo.LineTwo
+                       
+                    },
+                    PriceArea = new PriceArea
+                    {
+                        Price = model.sell_price.Value,
                         ShowtSideBarcode = true,
                         SideBarcodeValue = model.barcode.Trim()
                     }

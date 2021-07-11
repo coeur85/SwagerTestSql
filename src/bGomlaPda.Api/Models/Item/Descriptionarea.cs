@@ -6,8 +6,7 @@
         public bool DescriptionLineTwoDrawX { get; set; }
         public string DescriptionLineOne { get; set; }
         public string DescriptionLineTwo { get; set; }
-        public bool ShowtSideBarcode { get; set; }
-        public string SideBarcodeValue { get; set; }
+    
     }
 
 }

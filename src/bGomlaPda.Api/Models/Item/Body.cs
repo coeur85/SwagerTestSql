@@ -2,7 +2,8 @@
 {
     public record Body
     {
-        public decimal Price { get; set; }
+
+        public PriceArea PriceArea { get; set; }
         public Descriptionarea DescriptionArea { get; set; }
     }
 
